@@ -1,5 +1,10 @@
 package com.tempest;
 
+import com.tempest.utils.ConstructorResolver;
+import com.tempest.utils.FaildCreateObjectException;
+import com.tempest.utils.ReflectionUtils;
+
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +17,7 @@ public class ServiceManager {
 
     private static ServiceManager instance;
 
-    private List<Service> list;
+    private List<Object> list;
 
     private ServiceManager() {
         this.list = new ArrayList<>();
@@ -33,7 +38,7 @@ public class ServiceManager {
      *
      * @param object
      */
-    public void add(Service object) {
+    public void add(Object object) {
         this.list.add(object);
     }
 
@@ -43,13 +48,10 @@ public class ServiceManager {
      * @throws FaildCreateObjectException
      */
     public void createService(Class<?> clazz) throws FaildCreateObjectException {
-        try {
-            Service service = (Service) clazz.getDeclaredConstructor().newInstance();
-            this.add(service);
-        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-                | NoSuchMethodException | SecurityException e) {
-            throw new FaildCreateObjectException(e);
-        }
+            // コンストラクタを取得。
+           Constructor<?> constructor = ReflectionUtils.getConstructor(clazz);
+        Object obj =  ConstructorResolver.newInstance(constructor);
+        this.add(obj);
     }
 
 }

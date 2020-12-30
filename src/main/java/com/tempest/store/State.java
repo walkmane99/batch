@@ -2,6 +2,10 @@ package com.tempest.store;
 
 import com.tempest.utils.FaildCreateObjectException;
 
+import java.lang.reflect.Type;
+import java.util.Optional;
+
 public interface State {
-    public <T> T getProperties() throws FaildCreateObjectException;
+
+    <T> Optional<T> getProperties(Type type) throws FaildCreateObjectException;
 }

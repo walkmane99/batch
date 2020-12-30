@@ -16,11 +16,10 @@ public class Application {
         ApplicationScope.getInstance();
     }
 
-    public void registerService() {
+    private void registerService() {
         ServiceManager manager = ServiceManager.getInstance();
-        String pkg = "";
         String serviceAnnotation = "";
-        try (ScanResult scanResult = new ClassGraph().enableAnnotationInfo().whitelistPackages(pkg).scan()) {
+        try (ScanResult scanResult = new ClassGraph().enableAnnotationInfo().scan()) {
             ClassInfoList classInfoList = scanResult.getClassesWithAnnotation(serviceAnnotation);
             for (ClassInfo classInfo : classInfoList) {
                 try {
