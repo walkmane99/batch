@@ -354,7 +354,6 @@ public class SQLExecutorImpl implements SQLExecutor {
 
     }
 
-    @Override
     @Command
     public <T> int executor(Connection con, UpdateQuery query, T model, Class<T> clazz) throws SQLException {
         PreparedStatement statements = null;

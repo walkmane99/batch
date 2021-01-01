@@ -173,7 +173,7 @@ public final class SystemSQLExecutor implements SQLExecutor {
      * "created", "createdBy", "updated", "updatedBy"の値を置き換えます。
      *
      * @param model 対象のオブジェクト
-     * @param clazz 対象オブジェクトのType
+     * @param fields
      * @throws SQLException 値の置き換えに失敗した場合
      */
     private <T> void set(T model, List<Field> fields) throws SQLException {

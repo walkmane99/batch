@@ -1,4 +1,4 @@
-package com.tempest.sql.db2;
+package com.tempest.sql;
 
 
 

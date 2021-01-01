@@ -1,4 +1,4 @@
-package com.tempest.file;
+package com.tempest.sql;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -85,8 +85,8 @@ public interface SQLExecutor {
      * @param model　モデル（値）
      * @param clazz  modelのクラス
      */
-    //@Command
-    //public <T> int executor(Connection con, UpdateQuery query, T model, Class<T> clazz) throws SQLException ;
+    @Command
+    public <T> int executor(Connection con, UpdateQuery query, T model, Class<T> clazz) throws SQLException ;
 
 
 

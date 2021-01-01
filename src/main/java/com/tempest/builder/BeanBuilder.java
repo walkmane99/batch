@@ -1,5 +1,6 @@
 package com.tempest.builder;
 
+import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -25,7 +26,7 @@ public class BeanBuilder {
 
     private static BeanBuilder instance;
     private AutowiredResolver autowired;
-    private Map<Class<?>, Object> beans = new HashMap<>();
+    private Map<Type, Object> beans = new HashMap<>();
 
     private BeanBuilder() {
         autowired = new AutowiredResolver();
@@ -42,9 +43,9 @@ public class BeanBuilder {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T get(Class<T> clazz) {
-        log.debug("aaaaaaaa: " + clazz);
-        T target = (T) this.beans.get(clazz);
+    public <T> T get(Type type) {
+        log.debug("aaaaaaaa: " + type);
+        T target = (T) this.beans.get(type);
         if (target != null) {
             autowired.resolve(target);
             return target;
@@ -52,7 +53,7 @@ public class BeanBuilder {
         return null;
     }
 
-    void set(Class<?> clazz, Object obj) {
+    void set(Type clazz, Object obj) {
         this.beans.put(clazz, obj);
     }
 
@@ -86,11 +87,9 @@ public class BeanBuilder {
 
     private void search(String annotation, BiConsumer<BeanBuilder, ClassInfoList> create) {
         log.trace(() -> "search start");
-        String pkg = "com.jfe";
         // try (ScanResult scanResult = new ClassGraph().verbose() // Log to stderr
         try (ScanResult scanResult = new ClassGraph().enableAnnotationInfo() // Scan classes, methods, fields,
                                                                              // annotations
-                .whitelistPackages(pkg) // Scan com.xyz and subpackages (omit to scan all packages)
                 .scan()) {
             ClassInfoList classInfoList = scanResult.getClassesWithAnnotation(annotation);
             try {

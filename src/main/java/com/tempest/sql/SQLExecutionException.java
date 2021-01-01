@@ -1,11 +1,11 @@
 package com.tempest.sql;
 
-import com.tempest.FrameworkException;
+import com.tempest.ApplicationException;
 
 /**
  * SQLExecutionException
  */
-public class SQLExecutionException extends FrameworkException {
+public class SQLExecutionException extends ApplicationException {
 
     private static final long serialVersionUID = 1L;
 
