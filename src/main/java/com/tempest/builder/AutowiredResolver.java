@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.tempest.ApplicationRuntimeException;
 import com.tempest.annotation.Autowired;
@@ -27,10 +28,10 @@ public class AutowiredResolver {
      */
     private List<Field> getInjectionFields(Object target) {
         Field[] fields = target.getClass().getDeclaredFields();
-        return Arrays.asList(fields).stream().filter(p -> {
+        return Stream.of(fields).filter(p -> {
             Autowired autowired = p.getDeclaredAnnotation(Autowired.class);
             return autowired != null;
-        }).filter(p -> p.getType() != Connection.class).collect(Collectors.toList());
+        }).collect(Collectors.toList());
     }
 
     private Type getType(Field field) {

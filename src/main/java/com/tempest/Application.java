@@ -23,14 +23,9 @@ public class Application {
         String serviceAnnotation = "";
         try (ScanResult scanResult = new ClassGraph().enableAnnotationInfo().scan()) {
             ClassInfoList classInfoList = scanResult.getClassesWithAnnotation(serviceAnnotation);
-            for (ClassInfo classInfo : classInfoList) {
-                try {
-                    manager.createService(classInfo.loadClass());
-
-                } catch (FaildCreateObjectException e) {
-
-                }
-            }
+            manager.createService(classInfoList);
+        }catch (FaildCreateObjectException e) {
+            e.printStackTrace();
         }
 
     }

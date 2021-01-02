@@ -9,8 +9,10 @@ import com.tempest.ApplicationRuntimeException;
 import com.tempest.utils.FaildCreateObjectException;
 import com.tempest.utils.ReflectionUtils;
 
+import io.github.classgraph.ClassInfoList;
 import lombok.extern.log4j.Log4j2;
 
+import static com.tempest.function.LambdaExceptionUtil.*;
 @Log4j2
 public class ServiceManager {
 
@@ -48,23 +50,17 @@ public class ServiceManager {
         return (T) this.map.get(clazz);
     }
 
-    public <T> T creteService(Class<T> clazz)
-            throws InstantiationException, IllegalAccessException, FaildCreateObjectException {
-        T obj = this.getService(clazz);
-        if (obj == null) {
-            Class<T> cls = clazz;
-            obj = ReflectionUtils.newInstance(cls);
-            this.addService(obj);
-            this.setAutowired(obj);
-        }
-        return obj;
-    }
 
-    public void setAutowired(Object target) {
+    public void injectionAutowired(Object target) {
         AutowiredResolver autowired = new AutowiredResolver();
         autowired.resolve(target);
     }
 
+    public void createService(ClassInfoList list) throws FaildCreateObjectException {
+        list.stream().forEach(rethrowConsumer( classInfo -> {
+            createService(classInfo.loadClass());
+        }));
+    }
     /**
      *
      * @param clazz
@@ -75,5 +71,6 @@ public class ServiceManager {
         Constructor<?> constructor = ReflectionUtils.getConstructor(clazz);
         Object obj =  ConstructorResolver.newInstance(constructor);
         this.addService(obj);
+        this.injectionAutowired(obj);
     }
 }
