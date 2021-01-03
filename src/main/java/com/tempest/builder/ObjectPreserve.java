@@ -4,12 +4,23 @@ import com.tempest.utils.FaildCreateObjectException;
 import com.tempest.utils.ReflectionUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.function.Consumer;
 
-@Data
-public class ObjectPreserve {
+@EqualsAndHashCode(exclude={"instance","time","isSingleton","scope","type"})
+public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    @Override
+    public int compareTo(ObjectPreserve o) {
+        return this.hashCode() - o.hashCode();
+    }
+
     /**
      * インターフェースを考える。
      * イベントの発生？
@@ -21,33 +32,44 @@ public class ObjectPreserve {
     public enum Scope {
         SYSTEM,APPLICATION
     }
+
+    @Getter
     private boolean isSingleton;
 
+    @Getter
     private Scope score;
 
+    @Getter
     private Class<?> clazz;
 
+    @Getter
+    public String name;
+
+    @Getter
     private Object instance;
 
+    @Getter
     private BeanType type;
 
+    @Getter
     private LocalDateTime time;
 
-    public ObjectPreserve(Class<?> clazz, Scope scope, BeanType type ) {
-        this(clazz,scope,type,true);
+    public ObjectPreserve(Class<?> clazz, String name, Scope scope, BeanType type ) {
+        this(clazz, name,scope,type,true);
     }
-    public ObjectPreserve(Class<?> clazz, Scope scope, BeanType type, boolean isSingleton ) {
-        setSingleton(isSingleton);
-        setClazz(clazz);
-        setScore(scope);
-        setType(type);
+    public ObjectPreserve(Class<?> clazz, String name, Scope scope, BeanType type, boolean isSingleton ) {
+        this.clazz = clazz;
+        this.name = name;
+        this.score = scope;
+        this.type = type;
+        this.isSingleton = isSingleton;
     }
 
     @SuppressWarnings("unchecked")
     public <T> T create() throws FaildCreateObjectException {
         if (isSingleton()) {
             if (getInstance() == null) {
-                setInstance(newInstance());
+                this.instance =newInstance();
                 this.time = LocalDateTime.now();
             } else {
                 return (T) newInstance();
@@ -72,8 +94,8 @@ public class ObjectPreserve {
     }
 
     public void disponse() {
-        setInstance(null);
-        setTime(null);
+        this.instance = null;
+        this.time = null;
     }
 
 

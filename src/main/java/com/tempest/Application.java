@@ -36,7 +36,7 @@ public class Application {
     }
 
     private ObjectPreserve createObjectPreserve(ClassInfo classInfo) {
-        ObjectPreserve obj =  new ObjectPreserve(classInfo.loadClass(), null,null);
+        ObjectPreserve obj =  new ObjectPreserve(classInfo.loadClass(), null, null,null);
         return obj;
     }
 
