@@ -46,27 +46,24 @@ public class ObjectPreserve {
     @SuppressWarnings("unchecked")
     public <T> T create() throws FaildCreateObjectException {
         if (isSingleton()) {
-            if (instance == null) {
+            if (getInstance() == null) {
                 setInstance(newInstance());
-                if (getInstance() == null) {
-                    throw new FaildCreateObjectException("create faild.");
-                }
-                injectionAutowired(instance);
                 this.time = LocalDateTime.now();
             } else {
-                T instance = (T)getInstance();
-                if (instance == null) {
-                    throw new FaildCreateObjectException("create faild.");
-                }
-                injectionAutowired(instance);
-                return instance;
+                return (T) newInstance();
             }
         }
-        return (T)instance;
+        return (T)getInstance();
     }
 
     private Object newInstance()  throws FaildCreateObjectException {
-        return ConstructorResolver.newInstance( ReflectionUtils.getConstructor(clazz)).orElse(null);
+        try {
+            Object instance = ConstructorResolver.newInstance( ReflectionUtils.getConstructor(clazz)).orElseThrow();
+            injectionAutowired(instance);
+            return instance;
+        } catch (Throwable throwable) {
+            throw new FaildCreateObjectException("create faild.");
+        }
     }
 
     public void injectionAutowired(Object target) {
