@@ -18,6 +18,7 @@ import java.util.stream.Stream;
  *
  */
 public class Store implements State {
+
     private List<PropertyChangeListener> listeners;
 
     private Map<String, Object> map;
@@ -50,18 +51,7 @@ public class Store implements State {
         return map.containsKey(key);
     }
 
-    // 保持しているオブジェクトが持っているアノテーションを探して返すメソッド
 
-    public List<Object> getObject(String name) {
-        return map.values().stream().map(x -> {
-            Class<?> clazz = x.getClass();
-            long count = Stream.of(clazz.getDeclaredAnnotations()).filter(a -> a.toString().equals(name)).count();
-            if (count > 0) {
-                return x;
-            }
-            return null;
-        }).filter(Objects::nonNull).collect(Collectors.toList());
-    }
 
     /**
      *
@@ -76,11 +66,8 @@ public class Store implements State {
     }
 
 
-    public <T> Optional<T> getProperties(Type type) throws FaildCreateObjectException {
-       if( this.map.containsKey(type.getTypeName())) {
-           return Optional.of((T)this.map.get(type.getTypeName()));
-       }
-       return Optional.empty();
+    public <T> Optional<T> getProperties(Type type)  {
+        return Optional.ofNullable((T)this.map.get(type.getTypeName()));
     }
 
 }

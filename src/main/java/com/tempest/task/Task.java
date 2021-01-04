@@ -20,23 +20,6 @@ public interface Task {
 
     boolean execBefore() throws InterruptedException;
 
-    /**
-     * 各モジュールで独自に作成したBeanクラスを取得する。
-     *
-     * application.confに、「system.properties」を作成し、パッケージ名を含むクラス名を設定する。
-     * 独自に作成したBeanは、Stateクラスを継承する必要はない。
-     *
-     * @param <T>   戻りの型
-     * @param share 共有オブジェクト
-     * @return 独自に作成したオブジェクト
-     */
-    public default <T> Optional<T> getProperties(State share) {
-        try {
-            return Optional.of(share.getProperties());
-        } catch (FaildCreateObjectException e) {
-            e.printStackTrace();
-        }
-        return Optional.ofNullable(null);
-    }
+
 
 }

@@ -16,6 +16,6 @@ public @interface Service {
     public static enum Proxy {
         ON, OFF;
     }
-
+    String name() default "";
     Proxy proxy() default Proxy.OFF;
 }

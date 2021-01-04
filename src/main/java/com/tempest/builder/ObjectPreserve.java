@@ -46,13 +46,13 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
     public String name;
 
     @Getter
-    private Object instance;
+    private transient Object instance;
 
     @Getter
     private BeanType type;
 
     @Getter
-    private LocalDateTime time;
+    private transient LocalDateTime time;
 
     public ObjectPreserve(Class<?> clazz, String name, Scope scope, BeanType type ) {
         this(clazz, name,scope,type,true);

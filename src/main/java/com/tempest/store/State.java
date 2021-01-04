@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface State {
 
-    <T> Optional<T> getProperties(Type type) throws FaildCreateObjectException;
+    <T> Optional<T> getProperties(Type type);
 }

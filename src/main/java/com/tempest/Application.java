@@ -2,14 +2,16 @@ package com.tempest;
 
 import java.util.function.Function;
 
+import com.tempest.annotation.Bean;
+import com.tempest.annotation.Component;
+import com.tempest.annotation.Service;
 import com.tempest.builder.ObjectPreserve;
+import com.tempest.builder.ObjectPreserveList;
 import com.tempest.builder.ServiceManager;
+import com.tempest.store.Store;
 import com.tempest.utils.FaildCreateObjectException;
 import com.tempest.utils.ReflectionUtils;
-import io.github.classgraph.ClassGraph;
-import io.github.classgraph.ClassInfo;
-import io.github.classgraph.ClassInfoList;
-import io.github.classgraph.ScanResult;
+import io.github.classgraph.*;
 
 import static com.tempest.function.LambdaExceptionUtil.rethrowConsumer;
 
@@ -23,22 +25,47 @@ public class Application {
     }
 
     private void registerService() throws FaildCreateObjectException {
-        String serviceAnnotation = "";
+
         try (ScanResult scanResult = new ClassGraph().enableAnnotationInfo().scan()) {
-            ClassInfoList classInfoList = scanResult.getClassesWithAnnotation(serviceAnnotation);
-            createObjectPreserves(classInfoList);
+            ClassInfoList componentInfoList = scanResult.getClassesWithAnnotation(Component.class.getName());
+            ClassInfoList serviceInfoList = scanResult.getClassesWithAnnotation(Service.class.getName());
+            ClassInfoList beanInfoList = scanResult.getClassesWithAnnotation(Bean.class.getName());
+            createObjectPreserves(componentInfoList, ObjectPreserve.BeanType.COMPONENT);
+            createObjectPreserves(serviceInfoList, ObjectPreserve.BeanType.SERVICE);
+            createObjectPreserves(beanInfoList, ObjectPreserve.BeanType.BEAN);
         }
 
     }
 
-    private void createObjectPreserves(ClassInfoList list)  {
-        list.stream().forEach(rethrowConsumer( classInfo -> createObjectPreserve(classInfo)));
+    private void createObjectPreserves(ClassInfoList list, ObjectPreserve.BeanType type)  {
+        Store store = (Store) Store.getInstance();
+        ObjectPreserveList preserveList = this.getPreserveList();
+        list.stream().forEach(rethrowConsumer( classInfo -> preserveList.add(createObjectPreserve(classInfo, type))));
+        store.put(store.getClass().getName(), preserveList);
     }
 
-    private ObjectPreserve createObjectPreserve(ClassInfo classInfo) {
-        ObjectPreserve obj =  new ObjectPreserve(classInfo.loadClass(), null, null,null);
+    private  ObjectPreserveList getPreserveList() {
+        ObjectPreserveList preserveList = (ObjectPreserveList) Store.getInstance().getProperties(ObjectPreserveList.class).orElseGet(ObjectPreserveList::new);
+        return preserveList;
+    }
+
+    private ObjectPreserve createObjectPreserve(ClassInfo classInfo,  ObjectPreserve.BeanType type) {
+        String annotationName = getAnnotationName(type);
+        AnnotationInfo info =  classInfo.getAnnotationInfo(annotationName);
+        String name = (String) info.getParameterValues().stream().filter(value->value.getName().equals("name")).map(value-> value.getValue()).findFirst().orElse(null);
+        ObjectPreserve obj =  new ObjectPreserve(classInfo.loadClass(), name, null, type);
         return obj;
     }
 
+    private  String getAnnotationName(ObjectPreserve.BeanType type) {
+        if (type == ObjectPreserve.BeanType.BEAN ) {
+            return Bean.class.getName();
+        } else if ( type == ObjectPreserve.BeanType.SERVICE) {
+            return Service.class.getName();
+        } else if ( type == ObjectPreserve.BeanType.COMPONENT) {
+            return Component.class.getName();
+        }
+        return Service.class.getName();
+    }
 
 }
