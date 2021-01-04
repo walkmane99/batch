@@ -20,6 +20,16 @@ import static com.tempest.function.LambdaExceptionUtil.rethrowConsumer;
  */
 public class Application {
 
+
+    public static void main(String ...args) {
+        Application app = new Application();
+        try {
+            app.registerService();
+        } catch (FaildCreateObjectException e) {
+            e.printStackTrace();
+        }
+    }
+
     public Application() {
         ApplicationScope.getInstance();
     }
