@@ -9,7 +9,10 @@ import lombok.Getter;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @EqualsAndHashCode(exclude={"instance","time","isSingleton","scope","type"})
 public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable {
@@ -54,15 +57,34 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
     @Getter
     private transient LocalDateTime time;
 
+    private List<ObjectPreserve> preserveList;
+
     public ObjectPreserve(Class<?> clazz, String name, Scope scope, BeanType type ) {
         this(clazz, name,scope,type,true);
     }
     public ObjectPreserve(Class<?> clazz, String name, Scope scope, BeanType type, boolean isSingleton ) {
+        preserveList = new ArrayList<>();
         this.clazz = clazz;
         this.name = name;
         this.score = scope;
         this.type = type;
         this.isSingleton = isSingleton;
+    }
+
+    public void addRelation(List<ObjectPreserve> list) {
+        this.preserveList = list.stream()
+            .filter(preserve-> !preserve.equals(this))
+            .filter(preserve-> necessary(preserve))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * インスタンスを作成する上で必要かまた、autowrideアノテーションで必要かどうか確認
+     * @param preserve
+     * @return
+     */
+    private boolean necessary(ObjectPreserve preserve) {
+        return true;
     }
 
     @SuppressWarnings("unchecked")
@@ -87,6 +109,9 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
             throw new FaildCreateObjectException("create faild.");
         }
     }
+
+
+
 
     public void injectionAutowired(Object target) {
         AutowiredResolver autowired = new AutowiredResolver();

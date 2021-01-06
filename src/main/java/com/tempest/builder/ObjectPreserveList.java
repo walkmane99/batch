@@ -10,6 +10,9 @@ public class ObjectPreserveList implements List<ObjectPreserve> {
         list = new ArrayList<>();
     }
 
+    public void analyze() {
+        list.stream().forEach(preserve -> preserve.addRelation(list));
+    }
 
     /**
      * Returns the number of elements in this list.  If this list contains
