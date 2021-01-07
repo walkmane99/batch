@@ -1,5 +1,6 @@
 package com.tempest.builder;
 
+import java.lang.reflect.Type;
 import java.util.*;
 
 public class ObjectPreserveList implements List<ObjectPreserve> {
@@ -13,6 +14,7 @@ public class ObjectPreserveList implements List<ObjectPreserve> {
     public void analyze() {
         list.stream().forEach(preserve -> preserve.addRelation(list));
     }
+
 
     /**
      * Returns the number of elements in this list.  If this list contains

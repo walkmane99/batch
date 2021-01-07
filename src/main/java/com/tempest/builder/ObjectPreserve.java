@@ -8,12 +8,13 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
+import static com.tempest.function.LambdaExceptionUtil.*;
 @EqualsAndHashCode(exclude={"instance","time","isSingleton","scope","type"})
 public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable {
 
@@ -48,7 +49,6 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
     @Getter
     public String name;
 
-    @Getter
     private transient Object instance;
 
     @Getter
@@ -102,7 +102,9 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
 
     private Object newInstance()  throws FaildCreateObjectException {
         try {
-            Object instance = ConstructorResolver.newInstance( ReflectionUtils.getConstructor(clazz)).orElseThrow();
+            // 必要なオブジェクトを先に作っておく。
+            this.preserveList.stream().forEach(rethrowConsumer(ObjectPreserve::create));
+            Object instance = ConstructorResolver.newInstance(this).orElseThrow();
             injectionAutowired(instance);
             return instance;
         } catch (Throwable throwable) {
@@ -112,6 +114,9 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
 
 
 
+    Constructor<?>[] getConstractor() {
+        return getClazz().getDeclaredConstructors();
+    }
 
     public void injectionAutowired(Object target) {
         AutowiredResolver autowired = new AutowiredResolver();
@@ -123,5 +128,8 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
         this.time = null;
     }
 
+    private <T> T getInstance() {
+        return (T)this.instance;
+    }
 
 }

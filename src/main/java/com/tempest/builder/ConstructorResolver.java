@@ -14,17 +14,20 @@ import java.util.stream.Stream;
 
 public class ConstructorResolver {
 
-    public static <T> Optional<T> newInstance(Constructor<T> constructor) throws FaildCreateObjectException {
+    public static <T> Optional<T> newInstance(ObjectPreserve preserve) throws FaildCreateObjectException {
+        Constructor[] constructors = preserve.getConstractor();
         try {
-            Type[] types = constructor.getGenericParameterTypes();
-            //Autowiredアノテーションで色々設定していても、設定は無視する
-            Object[] objects = getObjects(types);
-            if (types.length == 0) {
-                return Optional.of( (T) constructor.newInstance());
-            } else if (objects.length == types.length) {
-                return Optional.of((T) constructor.newInstance(objects));
-            } else {
-                return  Optional.empty();
+            for (Constructor constructor : constructors) {
+                Type[] types = constructor.getGenericParameterTypes();
+                //Autowiredアノテーションで色々設定していても、設定は無視する
+                Object[] objects = getObjects(types);
+                if (types.length == 0) {
+                    return Optional.of((T) constructor.newInstance());
+                } else if (objects.length == types.length) {
+                    return Optional.of((T) constructor.newInstance(objects));
+                } else {
+                    return Optional.empty();
+                }
             }
         } catch (Exception e) {
             throw  new FaildCreateObjectException(e);
@@ -47,17 +50,7 @@ public class ConstructorResolver {
         return null;
     }
 
-    public static Object[] getObjects(Type[] types) {
-        ServiceManager manager = ServiceManager.getInstance();
-        Object[] objects = Stream.of(types).map(type -> {
-            Object obj = manager.getService(type);
-            if (obj != null) {
-                return Optional.of(obj);
-            }
-            return Optional.empty();
-        }).flatMap(Optional::stream).toArray();
-        return objects;
-    }
+
 
 
 }

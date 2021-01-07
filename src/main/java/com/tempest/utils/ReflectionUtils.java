@@ -261,10 +261,7 @@ public class ReflectionUtils {
     }
 
 
-    public static Constructor  getConstructor(Class<?> clazz) {
-        Constructor[] constructors =clazz.getDeclaredConstructors();
-        return constructors[0];
-    }
+
     /**
      * 実際にインスタンスに詰め込む処理を行う関数を返します。
      *
