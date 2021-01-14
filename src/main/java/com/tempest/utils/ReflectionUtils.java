@@ -4,16 +4,19 @@ import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.*;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
 
 import com.tempest.ApplicationRuntimeException;
 import com.tempest.InvokeException;
@@ -113,6 +116,38 @@ public class ReflectionUtils {
         return (R) result;
     }
 
+    public static Set<Class<?>> getAllExtendedOrImplementedTypesRecursively(Class<?> clazz) {
+        List<Class<?>> res = new ArrayList<>();
+
+        do {
+            res.add(clazz);
+
+            // First, add all the interfaces implemented by this class
+            Class<?>[] interfaces = clazz.getInterfaces();
+            if (interfaces.length > 0) {
+                res.addAll(Arrays.asList(interfaces));
+
+                for (Class<?> interfaze : interfaces) {
+                    res.addAll(getAllExtendedOrImplementedTypesRecursively(interfaze));
+                }
+            }
+
+            // Add the super class
+            Class<?> superClass = clazz.getSuperclass();
+
+            // Interfaces does not have java,lang.Object as superclass, they have null, so
+            // break the cycle and return
+            if (superClass == null) {
+                break;
+            }
+
+            // Now inspect the superclass
+            clazz = superClass;
+        } while (!"java.lang.Object".equals(clazz.getCanonicalName()));
+
+        return new HashSet<Class<?>>(res);
+    }
+
     /**
      * Stringを<T>に変換し、オブジェクトを返します。
      *
@@ -196,29 +231,31 @@ public class ReflectionUtils {
      * @param values 変換対象
      * @param clazz  変換するクラス
      */
-//    public static <T> List<String> convertList(T values, MetaData data, Class<T> clazz) {
-//        return data.getList().stream().map(x -> {
-//            try {
-//                PropertyDescriptor descriptor = getPropertyDescriptor(clazz, x);
-//                Method read = descriptor.getReadMethod();
-//                Object obj;
-//                try {
-//                    obj = read.invoke(values, new Object[] {});
-//                    return obj.toString();
-//                } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-//                }
-//            } catch (ApplicationRuntimeException e) {
-//
-//            }
-//            return " ";
-//        }).collect(Collectors.toList());
-//    }
+    // public static <T> List<String> convertList(T values, MetaData data, Class<T>
+    // clazz) {
+    // return data.getList().stream().map(x -> {
+    // try {
+    // PropertyDescriptor descriptor = getPropertyDescriptor(clazz, x);
+    // Method read = descriptor.getReadMethod();
+    // Object obj;
+    // try {
+    // obj = read.invoke(values, new Object[] {});
+    // return obj.toString();
+    // } catch (IllegalAccessException | IllegalArgumentException |
+    // InvocationTargetException e) {
+    // }
+    // } catch (ApplicationRuntimeException e) {
+    //
+    // }
+    // return " ";
+    // }).collect(Collectors.toList());
+    // }
 
     /**
      * PropertyDescriptorを返します。
      *
-     * @param clazz      クラス
-     * @param name カラム名
+     * @param clazz クラス
+     * @param name  カラム名
      *
      * @return PropertyDescriptor
      */
@@ -260,7 +297,44 @@ public class ReflectionUtils {
         return result;
     }
 
-
+    /**
+     * 実際にインスタンスに詰め込む処理を行う関数を返します。
+     *
+     * @param procNo   プロセス番号
+     * @param uniqueId ユニークID
+     * @param metaData メタデータ
+     * @return インスタンスに詰め込む関数。
+     */
+    // public static <T> Function<Item, BiConsumer_WithExceptions<T, Record,
+    // Exception>> fillInstance(Integer procNo,
+    // String uniqueId, MetaData metaData) {
+    // return x -> (rs, record) -> {
+    // Field field = x.getField();
+    // Inject inject = field.getDeclaredAnnotation(Inject.class);
+    // if (inject != null) {
+    // inject(field, inject, metaData).apply(x).accept(rs, record);
+    // } else {
+    // // List以外のパラメータ
+    // if (field.getName().equals("procNo")) {
+    // x.getMethod().invoke(rs, new Object[] { procNo });
+    // } else if (field.getName().equals("uniqueId")) {
+    // x.getMethod().invoke(rs, new Object[] { uniqueId });
+    // } else {
+    // // 戻すクラスに定義されているフィールド名と同じ名前のついたCSVカラムを返す。
+    // try {
+    // String value =
+    // record.getValue(ConditionsUtils.camelToSsnake(field.getName()));
+    // if (log.isTraceEnabled()) {
+    // log.trace("field name : " + ConditionsUtils.camelToSsnake(field.getName()));
+    // }
+    // x.getMethod().invoke(rs, new Object[] { ReflectionUtils.convert(value,
+    // field.getType()) });
+    // } catch (NotFoundException e) {
+    // }
+    // }
+    // }
+    // };
+    // }
 
     /**
      * 実際にインスタンスに詰め込む処理を行う関数を返します。
@@ -270,86 +344,54 @@ public class ReflectionUtils {
      * @param metaData メタデータ
      * @return インスタンスに詰め込む関数。
      */
-//    public static <T> Function<Item, BiConsumer_WithExceptions<T, Record, Exception>> fillInstance(Integer procNo,
-//            String uniqueId, MetaData metaData) {
-//        return x -> (rs, record) -> {
-//            Field field = x.getField();
-//            Inject inject = field.getDeclaredAnnotation(Inject.class);
-//            if (inject != null) {
-//                inject(field, inject, metaData).apply(x).accept(rs, record);
-//            } else {
-//                // List以外のパラメータ
-//                if (field.getName().equals("procNo")) {
-//                    x.getMethod().invoke(rs, new Object[] { procNo });
-//                } else if (field.getName().equals("uniqueId")) {
-//                    x.getMethod().invoke(rs, new Object[] { uniqueId });
-//                } else {
-//                    // 戻すクラスに定義されているフィールド名と同じ名前のついたCSVカラムを返す。
-//                    try {
-//                        String value = record.getValue(ConditionsUtils.camelToSsnake(field.getName()));
-//                        if (log.isTraceEnabled()) {
-//                            log.trace("field name : " + ConditionsUtils.camelToSsnake(field.getName()));
-//                        }
-//                        x.getMethod().invoke(rs, new Object[] { ReflectionUtils.convert(value, field.getType()) });
-//                    } catch (NotFoundException e) {
-//                    }
-//                }
-//            }
-//        };
-//    }
+    // public static <T> Function<Item, BiConsumer_WithExceptions<T, Record,
+    // Exception>> fillInstanceAll(Integer procNo,
+    // String uniqueId, MetaData metaData) {
+    // return x -> (rs, record) -> {
+    // Field field = x.getField();
+    // Inject inject = field.getDeclaredAnnotation(Inject.class);
+    // if (inject != null) {
+    // inject(field, inject, metaData).apply(x).accept(rs, record);
+    // } else {
+    // // 戻すクラスに定義されているフィールド名と同じ名前のついたCSVカラムを返す。
+    // try {
+    // String value =
+    // record.getValue(ConditionsUtils.camelToSsnake(field.getName()));
+    // if (log.isTraceEnabled()) {
+    // log.trace("field name : " + ConditionsUtils.camelToSsnake(field.getName()));
+    // }
+    // x.getMethod().invoke(rs, new Object[] { ReflectionUtils.convert(value,
+    // field.getType()) });
+    // } catch (NotFoundException e) {
+    // }
+    // }
+    // };
+    // }
 
-    /**
-     * 実際にインスタンスに詰め込む処理を行う関数を返します。
-     *
-     * @param procNo   プロセス番号
-     * @param uniqueId ユニークID
-     * @param metaData メタデータ
-     * @return インスタンスに詰め込む関数。
-     */
-//    public static <T> Function<Item, BiConsumer_WithExceptions<T, Record, Exception>> fillInstanceAll(Integer procNo,
-//            String uniqueId, MetaData metaData) {
-//        return x -> (rs, record) -> {
-//            Field field = x.getField();
-//            Inject inject = field.getDeclaredAnnotation(Inject.class);
-//            if (inject != null) {
-//                inject(field, inject, metaData).apply(x).accept(rs, record);
-//            } else {
-//                // 戻すクラスに定義されているフィールド名と同じ名前のついたCSVカラムを返す。
-//                try {
-//                    String value = record.getValue(ConditionsUtils.camelToSsnake(field.getName()));
-//                    if (log.isTraceEnabled()) {
-//                        log.trace("field name : " + ConditionsUtils.camelToSsnake(field.getName()));
-//                    }
-//                    x.getMethod().invoke(rs, new Object[] { ReflectionUtils.convert(value, field.getType()) });
-//                } catch (NotFoundException e) {
-//                }
-//            }
-//        };
-//    }
-
-//    private static <T> Function<Item, BiConsumer_WithExceptions<T, Record, Exception>> inject(Field field,
-//            Inject inject, MetaData metaData) {
-//        return x -> (rs, record) -> {
-//            if (field.getType() == List.class) {
-//                if (inject.type() == Inject.Type.KEY) {
-//                    fillHeadList(metaData).apply(x).accept(rs, record);
-//                } else {
-//                    fillValueList(metaData).apply(x).accept(rs, record);
-//                }
-//            } else {
-//                ParameterizedType pt = (ParameterizedType) field.getGenericType();
-//                Type[] types = pt.getActualTypeArguments();
-//                if (types[0] != String.class) {
-//                    throw new Exception("Mapのジェネリックスの定義が間違っています。");
-//                }
-//                if (inject.type() == Inject.Type.KEY) {
-//                    fillHeadMap(metaData).apply(x).accept(rs, record);
-//                } else {
-//                    fillValueMap(metaData, (Class<?>) types[1]).apply(x).accept(rs, record);
-//                }
-//            }
-//        };
-//    }
+    // private static <T> Function<Item, BiConsumer_WithExceptions<T, Record,
+    // Exception>> inject(Field field,
+    // Inject inject, MetaData metaData) {
+    // return x -> (rs, record) -> {
+    // if (field.getType() == List.class) {
+    // if (inject.type() == Inject.Type.KEY) {
+    // fillHeadList(metaData).apply(x).accept(rs, record);
+    // } else {
+    // fillValueList(metaData).apply(x).accept(rs, record);
+    // }
+    // } else {
+    // ParameterizedType pt = (ParameterizedType) field.getGenericType();
+    // Type[] types = pt.getActualTypeArguments();
+    // if (types[0] != String.class) {
+    // throw new Exception("Mapのジェネリックスの定義が間違っています。");
+    // }
+    // if (inject.type() == Inject.Type.KEY) {
+    // fillHeadMap(metaData).apply(x).accept(rs, record);
+    // } else {
+    // fillValueMap(metaData, (Class<?>) types[1]).apply(x).accept(rs, record);
+    // }
+    // }
+    // };
+    // }
 
     /**
      * ラベルをMapにして用意されたFieldに詰め込みます。
@@ -358,15 +400,17 @@ public class ReflectionUtils {
      * @param metaData
      * @return
      */
-//    private static <T> Function<Item, BiConsumer_WithExceptions<T, Record, Exception>> fillHeadMap(MetaData metaData) {
-//        // List データ領域
-//        // メタデータに問い合わせる。
-//        List<String> list = metaData.getSensors();
-//        return x -> (rs, record) -> {
-//            x.getMethod().invoke(rs, new Object[] { IntStream.range(0, list.size()).boxed()
-//                    .collect(Collectors.toMap(list::get, Function.identity())) });
-//        };
-//    }
+    // private static <T> Function<Item, BiConsumer_WithExceptions<T, Record,
+    // Exception>> fillHeadMap(MetaData metaData) {
+    // // List データ領域
+    // // メタデータに問い合わせる。
+    // List<String> list = metaData.getSensors();
+    // return x -> (rs, record) -> {
+    // x.getMethod().invoke(rs, new Object[] { IntStream.range(0,
+    // list.size()).boxed()
+    // .collect(Collectors.toMap(list::get, Function.identity())) });
+    // };
+    // }
 
     /**
      * ラベルをListにして用意されたFieldに詰め込みます。
@@ -375,15 +419,17 @@ public class ReflectionUtils {
      * @param metaData
      * @return
      */
-//    private static <T> Function<Item, BiConsumer_WithExceptions<T, Record, Exception>> fillHeadList(MetaData metaData) {
-//        // List データ領域
-//        // メタデータに問い合わせる。
-//        return x -> (rs, record) -> {
-//            List<String> sensorVals = metaData.getSensors().stream().map(Function.identity())
-//                    .collect(Collectors.toList());
-//            x.getMethod().invoke(rs, new Object[] { sensorVals });
-//        };
-//    }
+    // private static <T> Function<Item, BiConsumer_WithExceptions<T, Record,
+    // Exception>> fillHeadList(MetaData metaData) {
+    // // List データ領域
+    // // メタデータに問い合わせる。
+    // return x -> (rs, record) -> {
+    // List<String> sensorVals =
+    // metaData.getSensors().stream().map(Function.identity())
+    // .collect(Collectors.toList());
+    // x.getMethod().invoke(rs, new Object[] { sensorVals });
+    // };
+    // }
 
     /**
      * 値をリストに詰め込みます。
@@ -392,56 +438,64 @@ public class ReflectionUtils {
      * @param metaData
      * @return
      */
-//    private static <T> Function<Item, BiConsumer_WithExceptions<T, Record, Exception>> fillValueList(
-//            MetaData metaData) {
-//        // List データ領域
-//        // メタデータに問い合わせる。
-//        return x -> (rs, record) -> {
-//            List<String> sensorVals = metaData.getSensors().stream().map(sensorName -> {
-//                try {
-//                    if (log.isTraceEnabled()) {
-//                        log.trace("センサー名" + sensorName);
-//                    }
-//                    return record.getValue(sensorName);
-//                } catch (NotFoundException e) {
-//                    log.warn(String.format("noting sensor , %s", sensorName));
-//                }
-//                return null;
-//            }).filter(Objects::nonNull).collect(Collectors.toList());
-//            Type[] types = x.getMethod().getGenericParameterTypes();
-//            // Now assuming that the first parameter to the method is of type List<Integer>
-//            ParameterizedType pType = (ParameterizedType) types[0];
-//            Class<?> genericClass = (Class<?>) pType.getActualTypeArguments()[0];
-//            x.getMethod().invoke(rs, new Object[] { ReflectionUtils.convertList(sensorVals, genericClass) });
-//        };
-//    }
+    // private static <T> Function<Item, BiConsumer_WithExceptions<T, Record,
+    // Exception>> fillValueList(
+    // MetaData metaData) {
+    // // List データ領域
+    // // メタデータに問い合わせる。
+    // return x -> (rs, record) -> {
+    // List<String> sensorVals = metaData.getSensors().stream().map(sensorName -> {
+    // try {
+    // if (log.isTraceEnabled()) {
+    // log.trace("センサー名" + sensorName);
+    // }
+    // return record.getValue(sensorName);
+    // } catch (NotFoundException e) {
+    // log.warn(String.format("noting sensor , %s", sensorName));
+    // }
+    // return null;
+    // }).filter(Objects::nonNull).collect(Collectors.toList());
+    // Type[] types = x.getMethod().getGenericParameterTypes();
+    // // Now assuming that the first parameter to the method is of type
+    // List<Integer>
+    // ParameterizedType pType = (ParameterizedType) types[0];
+    // Class<?> genericClass = (Class<?>) pType.getActualTypeArguments()[0];
+    // x.getMethod().invoke(rs, new Object[] {
+    // ReflectionUtils.convertList(sensorVals, genericClass) });
+    // };
+    // }
 
     /**
      * 値をMapに詰め込みます。
      *
      * @return
      */
-//    private static <T> Function<Item, BiConsumer_WithExceptions<T, Record, Exception>> fillValueMap(MetaData metaData,
-//            Class<?> genericClass) {
-//        // List データ領域
-//        // メタデータに問い合わせる。
-//        return x -> (rs, record) -> {
-//            Map<String, Object> sensorVals = metaData.getSensors().stream().map(sensorName -> {
-//                try {
-//                    if (log.isTraceEnabled()) {
-//                        log.trace("センサー名" + sensorName);
-//                    }
-//                    return new KeyValue(sensorName, ReflectionUtils.convert(record.getValue(sensorName), genericClass));
-//                } catch (NotFoundException e) {
-//                    log.warn(String.format("noting sensor , %s", sensorName));
-//                }
-//                return null;
-//            }).filter(Objects::nonNull).filter(e -> e.getKey() != null && !e.getKey().isEmpty())
-//                    .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue() == null ? "" : e.getValue(),
-//                            (e1, e2) -> e1, LinkedHashMap::new));
-//            x.getMethod().invoke(rs, new Object[] { sensorVals });
-//        };
-//    }
+    // private static <T> Function<Item, BiConsumer_WithExceptions<T, Record,
+    // Exception>> fillValueMap(MetaData metaData,
+    // Class<?> genericClass) {
+    // // List データ領域
+    // // メタデータに問い合わせる。
+    // return x -> (rs, record) -> {
+    // Map<String, Object> sensorVals =
+    // metaData.getSensors().stream().map(sensorName -> {
+    // try {
+    // if (log.isTraceEnabled()) {
+    // log.trace("センサー名" + sensorName);
+    // }
+    // return new KeyValue(sensorName,
+    // ReflectionUtils.convert(record.getValue(sensorName), genericClass));
+    // } catch (NotFoundException e) {
+    // log.warn(String.format("noting sensor , %s", sensorName));
+    // }
+    // return null;
+    // }).filter(Objects::nonNull).filter(e -> e.getKey() != null &&
+    // !e.getKey().isEmpty())
+    // .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue() == null ? "" :
+    // e.getValue(),
+    // (e1, e2) -> e1, LinkedHashMap::new));
+    // x.getMethod().invoke(rs, new Object[] { sensorVals });
+    // };
+    // }
 
     @Data
     @AllArgsConstructor

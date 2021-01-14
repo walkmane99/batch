@@ -20,21 +20,22 @@ public abstract class TaskFunction<T> extends BaseTask {
      */
     @Override
     public boolean exec(final State share) throws InterruptedException {
-        Optional<T> state = this.getProperties(share);
-        try {
-            boolean result = state.map(rethrowFunction(st -> createTaskFunction(share).apply(st))).get();
-            if (result) {
-                return super.exec(share);
-            }
-        } catch (Exception e) {
-            log.catching(e);
-            if (e instanceof InterruptedException) {
-                throw (InterruptedException) e;
-            } else if (e instanceof RuntimeException) {
-                throw (RuntimeException) e;
-            }
-            throw new RuntimeException(e.getMessage(), e);
-        }
+        // Optional<T> state = this.getProperties(share);
+        // try {
+        // boolean result = state.map(rethrowFunction(st ->
+        // createTaskFunction(share).apply(st))).get();
+        // if (result) {
+        // return super.exec(share);
+        // }
+        // } catch (Exception e) {
+        // log.catching(e);
+        // if (e instanceof InterruptedException) {
+        // throw (InterruptedException) e;
+        // } else if (e instanceof RuntimeException) {
+        // throw (RuntimeException) e;
+        // }
+        // throw new RuntimeException(e.getMessage(), e);
+        // }
         return false;
     }
 

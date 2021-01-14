@@ -13,6 +13,7 @@ import io.github.classgraph.ClassInfoList;
 import lombok.extern.log4j.Log4j2;
 
 import static com.tempest.function.LambdaExceptionUtil.*;
+
 @Log4j2
 public class ServiceManager {
 
@@ -28,6 +29,7 @@ public class ServiceManager {
 
     /**
      * インスタンスを取得します。
+     * 
      * @return
      */
     public static ServiceManager getInstance() {
@@ -50,27 +52,9 @@ public class ServiceManager {
         return (T) this.map.get(clazz);
     }
 
-
     public void injectionAutowired(Object target) {
         AutowiredResolver autowired = new AutowiredResolver();
         autowired.resolve(target);
     }
 
-    public void createService(ClassInfoList list) throws FaildCreateObjectException {
-        list.stream().forEach(rethrowConsumer( classInfo -> {
-            createService(classInfo.loadClass());
-        }));
-    }
-    /**
-     *
-     * @param clazz
-     * @throws FaildCreateObjectException
-     */
-    public void createService(Class<?> clazz) throws FaildCreateObjectException {
-        // コンストラクタを取得。
-        Constructor<?> constructor = ReflectionUtils.getConstructor(clazz);
-        Object obj =  ConstructorResolver.newInstance(constructor);
-        this.addService(obj);
-        this.injectionAutowired(obj);
-    }
 }
