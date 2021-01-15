@@ -89,12 +89,21 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
 
     /**
      * インスタンスを作成する上で必要かまた、autowrideアノテーションで必要かどうか確認
-     * 
+     *
      * @param preserve
      * @return
      */
     private boolean necessary(ObjectPreserve preserve) {
-        return true;
+        if (this.equals(preserve)) {
+            // 同じものは要らない。
+            return false;
+        }
+        // 必要なコンストラクタの型
+        // @autowiredで定義されている属性情報が必要。
+
+       return preserve.getAllExtendedOrImplementedTypesRecursively().stream()
+            .anyMatch(x -> typeList.contains(x.getTypeName())))
+
     }
 
     @SuppressWarnings("unchecked")
@@ -118,6 +127,7 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
             injectionAutowired(instance);
             return instance;
         } catch (Throwable throwable) {
+            throwable.printStackTrace();
             throw new FaildCreateObjectException("create faild.");
         }
     }
