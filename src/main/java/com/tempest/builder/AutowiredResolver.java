@@ -26,12 +26,21 @@ public class AutowiredResolver {
      * @param target
      * @return
      */
-    private List<Field> getInjectionFields(Object target) {
-        Field[] fields = target.getClass().getDeclaredFields();
+    public List<Field> getInjectionFields(Class<?> target) {
+        Field[] fields = target.getDeclaredFields();
         return Stream.of(fields).filter(p -> {
             Autowired autowired = p.getDeclaredAnnotation(Autowired.class);
             return autowired != null;
         }).collect(Collectors.toList());
+    }
+
+    /**
+     *
+     * @param target
+     * @return
+     */
+    private List<Field> getInjectionFields(Object target) {
+        return this.getInjectionFields(target.getClass());
     }
 
     private Type getType(Field field) {

@@ -1,5 +1,6 @@
 package com.tempest.builder;
 
+import com.tempest.annotation.Autowired;
 import com.tempest.utils.FaildCreateObjectException;
 import com.tempest.utils.ReflectionUtils;
 import lombok.AllArgsConstructor;
@@ -9,10 +10,12 @@ import lombok.Getter;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -50,7 +53,7 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
     private Scope score;
 
     @Getter
-    private Class<?> clazz;
+    private Class<?> targetClass;
 
     @Getter
     public String name;
@@ -71,7 +74,7 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
 
     public ObjectPreserve(Class<?> clazz, String name, Scope scope, BeanType type, boolean isSingleton) {
         preserveList = new ArrayList<>();
-        this.clazz = clazz;
+        this.targetClass = clazz;
         this.name = name;
         this.score = scope;
         this.type = type;
@@ -84,7 +87,7 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
     }
 
     public Set<Class<?>> getAllExtendedOrImplementedTypesRecursively() {
-        return ReflectionUtils.getAllExtendedOrImplementedTypesRecursively(this.clazz);
+        return ReflectionUtils.getAllExtendedOrImplementedTypesRecursively(this.getTargetClass());
     }
 
     /**
@@ -100,9 +103,31 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
         }
         // 必要なコンストラクタの型
         // @autowiredで定義されている属性情報が必要。
-
-       return preserve.getAllExtendedOrImplementedTypesRecursively().stream()
-            .anyMatch(x -> typeList.contains(x.getTypeName())))
+        AutowiredResolver resolver = new AutowiredResolver();
+        // 自クラスのフィールドでAutowiredアノテーションがかかったフィールド
+        List<Field> fieldList = resolver.getInjectionFields(this.getTargetClass());
+        // 必要なのはその型情報
+        boolean bool = false;
+        for (Field field : fieldList) {
+            Autowired autowired = field.getAnnotation(Autowired.class);
+            if (autowired.name().equals(preserve.getName())) {
+                return true;
+            }
+            Class<?> clazz = field.getDeclaringClass();
+            if (clazz == List.class) {
+                // TODO: Listの場合、ジェネリックを調べる必要がある。
+            } else if (clazz == Map.class) {
+                // TODO: Mapの場合、ジェネリックを調べる必要がある。
+            } else {
+                // TODO: fieldの型のスーパークラスとインスタンスを取得してチェックする。
+                if (preserve.getAllExtendedOrImplementedTypesRecursively().contains(clazz)) {
+                    // 存在する場合は、即座にtrueを返して終わる。存在しない(false)の場合は、繰り返す。
+                    return true;
+                }
+                // スーパークラスとインスタンス？
+            }
+        }
+        return bool;
 
     }
 
@@ -133,7 +158,7 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
     }
 
     Constructor<?>[] getConstractor() {
-        return getClazz().getDeclaredConstructors();
+        return this.getTargetClass().getDeclaredConstructors();
     }
 
     public void injectionAutowired(Object target) {

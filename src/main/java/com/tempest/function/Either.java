@@ -24,6 +24,7 @@ import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 /**
+ * 
  * Represents a value of one of two possible types (a disjoint union.) Instances
  * of Either are either an instance of {@link Left} or {@link Right}
  *

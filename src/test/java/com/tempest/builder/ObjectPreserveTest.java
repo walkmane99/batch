@@ -1,6 +1,5 @@
 package com.tempest.builder;
 
-
 import com.tempest.DummyService;
 import com.tempest.DummyService2;
 import com.tempest.utils.FaildCreateObjectException;
@@ -23,10 +22,11 @@ public class ObjectPreserveTest {
         }
 
     }
+
     @Test
     public void test1() {
         ObjectPreserve p = new ObjectPreserve(DummyService.class, "test", null, null);
-        ObjectPreserve p2 = new ObjectPreserve(DummyService.class, "test", null, null);
+        ObjectPreserve p2 = new ObjectPreserve(DummyService2.class, "test", null, null);
         List<ObjectPreserve> list = new ArrayList<>();
         list.add(p);
         p2.addRelation(list);
