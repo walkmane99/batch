@@ -82,7 +82,7 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
     }
 
     public void addRelation(List<ObjectPreserve> list) {
-        this.preserveList = list.stream().filter(preserve -> !preserve.equals(this))
+        this.preserveList = list.stream()
                 .filter(preserve -> necessary(preserve)).collect(Collectors.toList());
     }
 
@@ -108,6 +108,12 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
         List<Field> fieldList = resolver.getInjectionFields(this.getTargetClass());
         // 必要なのはその型情報
         boolean bool = false;
+        // コンストラクタの引数を考えていなかった。
+        Constructor constructor =
+        this.getTargetClass().getDeclaredConstructors()[0];
+　　   if (constructor.getGenericParameterTypes().length > 0)　{
+            Type[] types = constructor.getGenericParameterTypes();
+        }
         for (Field field : fieldList) {
             Autowired autowired = field.getAnnotation(Autowired.class);
             if (autowired.name().equals(preserve.getName())) {
@@ -128,7 +134,6 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
             }
         }
         return bool;
-
     }
 
     @SuppressWarnings("unchecked")
@@ -177,8 +182,9 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
 
     public Object[] getObjects(Type[] types) throws FaildCreateObjectException {
         List<String> typeList = Stream.of(types).map(t -> t.getTypeName()).collect(Collectors.toList());
+        System.out.println(this.getPreserveList().size());
         return this.getPreserveList().stream().map(preserve -> {
-            if (preserve.getAllExtendedOrImplementedTypesRecursively().stream()
+            if (preserve.getAllExtendedOrImplementedTypesRecursively().stream().peek(x -> System.out.println(x.getTypeName()))
                     .anyMatch(x -> typeList.contains(x.getTypeName()))) {
                 return preserve;
             }
