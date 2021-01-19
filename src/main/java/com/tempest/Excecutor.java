@@ -5,26 +5,26 @@ import java.util.function.Function;
 /**
  * Excecutor
  */
-public interface Excecutor<T> {
+// public interface Excecutor<T> {
 
-    Excecutor<T> then(T t);
+// Excecutor<T> then(T t);
 
-    public class ClassExcecutor implements Excecutor<Class<?>> {
+// public class ClassExcecutor implements Excecutor<Class<?>> {
 
-        public Excecutor<Class<?>> then(final Class<?> t) {
+// public Excecutor<Class<?>> then(final Class<?> t) {
 
-            return this;
-        }
+// return this;
+// }
 
-    }
+// }
 
-    public class NameExcecutor implements Excecutor<String> {
+// public class NameExcecutor implements Excecutor<String> {
 
-        public Excecutor<String> then(final String t) {
+// public Excecutor<String> then(final String t) {
 
-            return this;
-        }
+// return this;
+// }
 
-    }
+// }
 
-}
+// }

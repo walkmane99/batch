@@ -7,7 +7,6 @@ import com.tempest.annotation.Component;
 import com.tempest.annotation.Service;
 import com.tempest.builder.ObjectPreserve;
 import com.tempest.builder.ObjectPreserveList;
-import com.tempest.builder.ServiceManager;
 import com.tempest.store.Store;
 import com.tempest.utils.FaildCreateObjectException;
 import com.tempest.utils.ReflectionUtils;

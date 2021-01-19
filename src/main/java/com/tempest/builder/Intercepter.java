@@ -17,16 +17,6 @@ import com.tempest.sql.QueryImpl;
 import lombok.extern.log4j.Log4j2;
 
 /**
- * メソッドの実行を横取りするハンドラーです。
- *
- * DBのテーブル名の最終決定を行います。 Commandアノテーションがついているメソッドに対して、処理前に、 テーブル名の変更を行います。
- * テーブル名を変更するには モデルに、TableNameアノテーションの注釈と、QueryクラスにてQueryオブジェクトを作成しておく必要があります。
- * しかし、Queryオブジェクトで直接ネイティブSQLを指定している場合は置き換え処理は発生しません。
- *
- * frameworkとして、
- * 本クラスは、com.jfe.base.framework.sql.SQLExecutorImplクラスの各SQL実行メソッドにCommandアノテーションを注釈しています。
- * 各SQL実行メソッドは、引数にQueryを持っています。
- * また、条件(model)も引数に持っています。このTableNameアノテーションの注釈を見て、どのテーブルに対してSQLを発行するか決めています。
  *
  *
  *
