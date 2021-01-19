@@ -1,7 +1,9 @@
 package com.tempest;
 
-public class DummyService {
+import com.tempest.annotation.Service;
 
+@Service
+public class DummyService {
 
     public String message() {
         return "message";

@@ -82,8 +82,7 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
     }
 
     public void addRelation(List<ObjectPreserve> list) {
-        this.preserveList = list.stream()
-                .filter(preserve -> necessary(preserve)).collect(Collectors.toList());
+        this.preserveList = list.stream().filter(preserve -> necessary(preserve)).collect(Collectors.toList());
     }
 
     public Set<Class<?>> getAllExtendedOrImplementedTypesRecursively() {
@@ -109,10 +108,14 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
         // 必要なのはその型情報
         boolean bool = false;
         // コンストラクタの引数を考えていなかった。
-        Constructor constructor =
-        this.getTargetClass().getDeclaredConstructors()[0];
-　　   if (constructor.getGenericParameterTypes().length > 0)　{
+        Constructor<?> constructor = this.getTargetClass().getDeclaredConstructors()[0];
+        if (constructor.getGenericParameterTypes().length > 0) {
             Type[] types = constructor.getGenericParameterTypes();
+            List<String> typeList = Stream.of(types).map(t -> t.getTypeName()).collect(Collectors.toList());
+            if (preserve.getAllExtendedOrImplementedTypesRecursively().stream()
+                    .anyMatch(x -> typeList.contains(x.getTypeName()))) {
+                return true;
+            }
         }
         for (Field field : fieldList) {
             Autowired autowired = field.getAnnotation(Autowired.class);
@@ -184,8 +187,8 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
         List<String> typeList = Stream.of(types).map(t -> t.getTypeName()).collect(Collectors.toList());
         System.out.println(this.getPreserveList().size());
         return this.getPreserveList().stream().map(preserve -> {
-            if (preserve.getAllExtendedOrImplementedTypesRecursively().stream().peek(x -> System.out.println(x.getTypeName()))
-                    .anyMatch(x -> typeList.contains(x.getTypeName()))) {
+            if (preserve.getAllExtendedOrImplementedTypesRecursively().stream()
+                    .peek(x -> System.out.println(x.getTypeName())).anyMatch(x -> typeList.contains(x.getTypeName()))) {
                 return preserve;
             }
             return null;
