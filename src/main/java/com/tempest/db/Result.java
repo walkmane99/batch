@@ -20,11 +20,11 @@ import java.sql.*;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
-
+import static com.tempest.function.LambdaExceptionUtil.*;
 @Log4j2
 public class Result<T>  {
 
-    private String query;
+    private Query query;
 
     private Class<T> targetClass;
 
@@ -32,7 +32,7 @@ public class Result<T>  {
         this.targetClass = targetClass;
     }
 
-    void setQuery(String query) {
+    void setQuery(Query query) {
         this.query = query;
     }
 
@@ -40,21 +40,21 @@ public class Result<T>  {
         return create(rs);
     }
 
-    public void execute(Consumer<T> consumer) throws SQLException, FaildCreateObjectException  {
-        try (Connection con = ConnectionPool.getInstance().getConnection()) {
-            this.execute(con, consumer);
-        }
-    }
 
-    private void execute(Connection con, Consumer<T> consumer) throws SQLException, FaildCreateObjectException  {
-        try (
-            PreparedStatement statement = con.prepareStatement(this.query);
-            ResultSet rs = statement.executeQuery()
-        ) {
+
+    void execute(Connection con, Consumer<T> consumer) throws SQLException, FaildCreateObjectException  {
+        PreparedStatement statement = con.prepareStatement(this.query.getSQL());
+        //TODO;順番の問題があるけど。
+        this.query.getConditions().stream().forEach(rethrowConsumer(condition -> condition.set(1, statement)));
+        try (ResultSet rs = statement.executeQuery()) {
             while (rs.next()) {
                 T row = this.getRow(rs);
                 consumer.accept(row);
             }
+        } finally {
+            try {
+                statement.close();
+            } catch (SQLException e) {}
         }
     }
 
