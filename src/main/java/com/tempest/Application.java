@@ -5,6 +5,7 @@ import java.util.function.Function;
 import com.tempest.annotation.Bean;
 import com.tempest.annotation.Component;
 import com.tempest.annotation.Service;
+import com.tempest.builder.BeanBuilder;
 import com.tempest.builder.ObjectPreserve;
 import com.tempest.builder.ObjectPreserveList;
 import com.tempest.store.Store;
@@ -29,6 +30,7 @@ public class Application {
     }
 
     public Application() {
+        BeanBuilder.getInstance();
         ApplicationScope.getInstance();
     }
 
@@ -37,10 +39,8 @@ public class Application {
         try (ScanResult scanResult = new ClassGraph().enableAnnotationInfo().scan()) {
             ClassInfoList componentInfoList = scanResult.getClassesWithAnnotation(Component.class.getName());
             ClassInfoList serviceInfoList = scanResult.getClassesWithAnnotation(Service.class.getName());
-            ClassInfoList beanInfoList = scanResult.getClassesWithAnnotation(Bean.class.getName());
             createObjectPreserves(componentInfoList, ObjectPreserve.BeanType.COMPONENT);
             createObjectPreserves(serviceInfoList, ObjectPreserve.BeanType.SERVICE);
-            createObjectPreserves(beanInfoList, ObjectPreserve.BeanType.BEAN);
         }
 
     }

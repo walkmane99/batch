@@ -37,7 +37,6 @@ public class BeanBuilder {
             instance = new BeanBuilder();
             instance.search("com.jfe.base.annotation.Configuration", builderConfigurations());
             instance.search("com.jfe.base.annotation.Bean", builderBeans());
-            instance.search("com.jfe.base.annotation.Component", builderBeans());
         }
         return instance;
     }
@@ -87,11 +86,11 @@ public class BeanBuilder {
 
     private void search(String annotation, BiConsumer<BeanBuilder, ClassInfoList> create) {
         log.trace(() -> "search start");
-        // try (ScanResult scanResult = new ClassGraph().verbose() // Log to stderr
-        try (ScanResult scanResult = new ClassGraph().enableAnnotationInfo() // Scan classes, methods, fields,
-                                                                             // annotations
+
+        try (ScanResult scanResult = new ClassGraph().enableAllInfo() // Scan classes, methods, fields,
+                                                                      // annotations
                 .scan()) {
-            ClassInfoList classInfoList = scanResult.getClassesWithAnnotation(annotation);
+            ClassInfoList classInfoList = scanResult.getClassesWithMethodAnnotation(annotation);
             try {
                 create.accept(this, classInfoList);
             } catch (IllegalArgumentException e) {

@@ -25,3 +25,7 @@ buildNumber.properties
 .classpath
 .project
 .vscode/
+src/main/java/com/tempest/builder/AutowiredResolver.java
+src/main/java/com/tempest/builder/ObjectPreserve.java
+src/main/java/com/tempest/function/Either.java
+src/test/java/com/tempest/builder/ObjectPreserveTest.java
