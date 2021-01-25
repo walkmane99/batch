@@ -40,6 +40,10 @@ public class Query {
         // select と その他は違う
     }
 
+    List<Condition<?>> getConditions() {
+        return this.conditions;
+    }
+
     /**
      * 条件の値を登録します。
      * 
