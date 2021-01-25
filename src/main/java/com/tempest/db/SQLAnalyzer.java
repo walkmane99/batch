@@ -3,14 +3,27 @@ package com.tempest.db;
 import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SQLAnalyzer {
     public final static char QUOTE = '\'';
     public final static char DOUBLE_QUOTE = '"';
 
-    public String type;
+    private enum QUERY_TYPE {
+        SELECT,UPDATE,INSERT,DELETE;
+    }
+
+    private int count;
+    private QUERY_TYPE type;
+
+    private Map<Integer,String> names;
 
     SQLAnalyzer() {
+        this.names = new HashMap<>();
     }
 
     public static void main(String... args) {
@@ -53,6 +66,7 @@ public class SQLAnalyzer {
                     // System.out.println("<number>" + tokenizer.nval + "</number>");
                     // break;
                     case StreamTokenizer.TT_WORD:
+                        word(tokenizer.sval);
                         System.out.println("<word>" + tokenizer.sval + "</word>");
                         break;
                     case QUOTE:
@@ -70,9 +84,44 @@ public class SQLAnalyzer {
             e.printStackTrace();
         }
 
+        this.names.entrySet().stream().forEach(x -> System.out.println(x.getKey() + " " + x.getValue()));
     }
 
     private void word(String val) {
+        if (this.type == null) {
+            // 構文のtypeを知ること
+            this.setType(val);
+            return;
+        }
+        // ${zzz} を取得すること先頭から続くのでその位置を持つこと、名前とindexの組み合わせで覚えておく
+        if (val.indexOf("${") != -1) {
+            this.count++;
+            this.names.put(this.count, val.substring(2, val.length() -1));
+        }
+    }
+    private void setType(String val) {
+        try {
+            QUERY_TYPE type = QUERY_TYPE.valueOf(val.toUpperCase(Locale.ROOT));
+            if (type != null) {
+                this.type = type;
+            }
+        }catch (IllegalArgumentException e) {
+            System.out.println("typeが存在しない。");
+        }
+    }
 
+    public boolean isSelect() {
+        return this.type == QUERY_TYPE.SELECT;
+    }
+
+    public boolean isDelete() {
+        return this.type == QUERY_TYPE.DELETE;
+    }
+    public boolean isInsert() {
+        return this.type == QUERY_TYPE.INSERT;
+    }
+
+    public boolean isUpdate() {
+        return this.type == QUERY_TYPE.UPDATE;
     }
 }
