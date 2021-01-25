@@ -12,7 +12,7 @@ public class SQLAnalyzer {
 
     public static void main(String ...args){
         SQLAnalyzer analyzer = new SQLAnalyzer();
-        analyzer.analyze("SELECT aaa FROM bbb b inner join www w on (b.r = w.r) WHERE xx=? AND A.b='test'");
+        analyzer.analyze("SELECT aaa FROM bbb b inner join www w on (b.r = w.r) WHERE xx=${name} AND A.b='test' and a.x=9");
 
     }
 
@@ -23,16 +23,16 @@ public class SQLAnalyzer {
         tokenizer.wordChars('0', '9');
         tokenizer.wordChars('a', 'z');
         tokenizer.wordChars('A', 'Z');
-        tokenizer.wordChars('*', '*');
-        tokenizer.wordChars('+', '+');
-        tokenizer.wordChars('/', '/');
+        tokenizer.wordChars('$', '$');
+        tokenizer.wordChars('{', '{');
+        tokenizer.wordChars('}', '}');
         tokenizer.whitespaceChars(' ', ' ');
         tokenizer.whitespaceChars('\t', '\t');
         tokenizer.whitespaceChars('\n', '\n');
         tokenizer.whitespaceChars('\r', '\r');
         tokenizer.quoteChar(QUOTE);
         tokenizer.quoteChar(DOUBLE_QUOTE);
-        tokenizer.parseNumbers();
+        //tokenizer.parseNumbers();
         tokenizer.eolIsSignificant(false);
         tokenizer.slashStarComments(true);
         tokenizer.slashSlashComments(true);
