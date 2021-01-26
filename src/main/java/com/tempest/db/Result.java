@@ -23,14 +23,16 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.tempest.function.LambdaExceptionUtil.*;
+
 @Log4j2
-public final class Result<T>  {
+public final class Result<T> {
 
     private Query query;
 
     private Class<T> targetClass;
 
-    Result() {}
+    Result() {
+    }
 
     Result(Class<T> targetClass) {
         this.targetClass = targetClass;
@@ -40,61 +42,53 @@ public final class Result<T>  {
         this.query = query;
     }
 
-
-
-
-
-    int execute(Connection con, Consumer<T> consumer) throws SQLException, FaildCreateObjectException  {
+    int execute(Connection con, Consumer<T> consumer) throws SQLException, FaildCreateObjectException {
         SQLAnalyzer analyzer = new SQLAnalyzer();
         analyzer.analyze(this.query.getSQL());
         PreparedStatement statement = con.prepareStatement(analyzer.getSQL());
-        //TODO;in区とかListを渡したいときの対応
+        // TODO;in区とかListを渡したいときの対応
         Map<Integer, Condition<?>> conditionMap = analyzer.getCondition(this.query.getConditions());
-        conditionMap.entrySet().forEach(rethrowConsumer(entry-> entry.getValue().set(entry.getKey(),statement)));
+        conditionMap.entrySet().forEach(rethrowConsumer(entry -> entry.getValue().set(entry.getKey(), statement)));
         // 実行するSQLのタイプに寄って処理を分岐する。
-        if (analyzer.isSelect() ) {
-            this.executeQuery(statement,consumer);
-            //TODO:件数
+        if (analyzer.isSelect()) {
+            this.executeQuery(statement, consumer);
+            // TODO:件数
             return 0;
         } else {
-           return this.executeUpdate(statement);
+            return this.executeUpdate(statement);
         }
     }
 
-
-    int execute(Connection con, List<T> list) throws SQLException, FaildCreateObjectException  {
+    int execute(Connection con, List<T> list) throws SQLException, FaildCreateObjectException, IllegalAccessException {
         SQLAnalyzer analyzer = new SQLAnalyzer();
         analyzer.analyze(this.query.getSQL());
         PreparedStatement statement = con.prepareStatement(analyzer.getSQL());
 
-
         Class<T> clazz = (Class<T>) list.get(0).getClass();
         Field[] fields = ReflectionUtils.getFields(clazz);
+        // Map<Integer, Condition<?>> conditionMap =
+        list.stream().flatMap(rethrowFunction(record -> {
+            List<Condition<?>> conditions = Stream.of(fields).map(rethrowFunction(field -> {
+                Condition<?> result = null;
+                if (field.getDeclaringClass() == String.class) {
+                    result = new StringCondition(field.getName(), (String) field.get(record));
+                }
+                result = new StringCondition("1", "");
+                return result;
+            })).collect(Collectors.toList());
+            return analyzer.getCondition(conditions).entrySet().stream();
 
-        Map<Integer, Condition<?>> conditionMap =
-            list.stream().flatMap(record ->
-                Stream.of(fields).map(field -> {
+        })).forEach(rethrowConsumer(entry -> entry.getValue().set(entry.getKey(), statement)));
 
-                    if (field.getClass() == String) {
-                        return new StringCondition(field.getName(), field.get(record));
-                    }
-                    return new StringCondition("1","");
-                });
-    }).;
-
-
-
-    //FIXME: ここで引数のlistからconditionListを作成する。
-         analyzer.getCondition(this.query.getConditions());
-        conditionMap.entrySet().forEach(rethrowConsumer(entry-> entry.getValue().set(entry.getKey(),statement)));
-        if (!analyzer.isSelect() ) {
+        if (!analyzer.isSelect()) {
             return this.executeUpdate(statement);
         }
         return 0;
     }
 
     /**
-     *　更新処理系
+     * 更新処理系
+     * 
      * @param statement
      * @return
      * @throws SQLException
@@ -105,12 +99,14 @@ public final class Result<T>  {
 
     /**
      * 検索刑
+     * 
      * @param statement
      * @param consumer
      * @return
      * @throws SQLException
      */
-    private void executeQuery(PreparedStatement statement, Consumer<T> consumer) throws SQLException, FaildCreateObjectException {
+    private void executeQuery(PreparedStatement statement, Consumer<T> consumer)
+            throws SQLException, FaildCreateObjectException {
         try (ResultSet rs = statement.executeQuery()) {
             while (rs.next()) {
                 T row = this.getRow(rs);
@@ -119,30 +115,28 @@ public final class Result<T>  {
         } finally {
             try {
                 statement.close();
-            } catch (SQLException e) {}
+            } catch (SQLException e) {
+            }
         }
     }
 
-
-    private  T getRow(ResultSet rs)
-        throws SQLException, FaildCreateObjectException {
+    private T getRow(ResultSet rs) throws SQLException, FaildCreateObjectException {
         try {
             boolean filled = false;
             ResultSetMetaData metaData = rs.getMetaData();
             T his = ReflectionUtils.newInstance(this.targetClass);
             for (int i = 0; i < metaData.getColumnCount(); i++) {
                 String colName = metaData.getColumnName(i + 1).trim();
-                boolean result = setResult(rs, his,  colName);
+                boolean result = setResult(rs, his, colName);
                 filled = filled || result;
             }
             return filled ? his : null;
-        } catch (  IllegalArgumentException |   SecurityException e) {
+        } catch (IllegalArgumentException | SecurityException e) {
             throw new ApplicationRuntimeException(new SQLExecutionException(e));
         }
     }
 
-    private  boolean setResult(ResultSet rs, T model, String colName)
-        throws SQLException {
+    private boolean setResult(ResultSet rs, T model, String colName) throws SQLException {
         log.trace("start setResult");
         log.trace(colName);
         boolean filled = false;
@@ -204,7 +198,7 @@ public final class Result<T>  {
                     filled = true;
                 }
             } else if (clazz == BigDecimal.class || clazz == Float.class || clazz == float.class
-                || clazz == Double.class || clazz == double.class) {
+                    || clazz == Double.class || clazz == double.class) {
                 BigDecimal result = rs.getBigDecimal(colName);
                 if (!rs.wasNull()) {
                     if (clazz == Double.class || clazz == double.class) {
@@ -218,12 +212,14 @@ public final class Result<T>  {
                 }
             }
             return filled;
-        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | SQLExecutionException e) {
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException
+                | SQLExecutionException e) {
             log.error(e.getMessage(), e);
             throw new ApplicationRuntimeException(new SQLExecutionException(e));
         }
 
     }
+
     /**
      * PropertyDescriptorを返します。
      * カラム名からプロパティ名を作成し、clazzからフィールドプロパティを特定してPropertyDescriptorとして返します。
@@ -237,8 +233,7 @@ public final class Result<T>  {
      * @return PropertyDescriptor
      * @throws SQLExecutionException
      */
-    private PropertyDescriptor getPropertyDescriptor(Class<T> clazz, String columnName)
-        throws SQLExecutionException {
+    private PropertyDescriptor getPropertyDescriptor(Class<T> clazz, String columnName) throws SQLExecutionException {
         if (log.isTraceEnabled()) {
             log.trace("start getPropertyDescriptor");
             log.trace("class : " + clazz.getName());
@@ -267,4 +262,3 @@ public final class Result<T>  {
         }
     }
 }
-
