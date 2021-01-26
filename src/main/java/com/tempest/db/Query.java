@@ -27,7 +27,7 @@ import java.util.function.Consumer;
  * オブジェクト (バイナリ）
  *
  */
-public class Query {
+public final class Query {
 
     private String query;
 
@@ -36,8 +36,6 @@ public class Query {
     public Query(String query) {
         this.conditions = new ArrayList<>();
         this.query = query;
-        // クエリの解析？
-        // select と その他は違う
     }
 
     List<Condition<?>> getConditions() {
@@ -46,7 +44,7 @@ public class Query {
 
     /**
      * 条件の値を登録します。
-     * 
+     *
      * @param name  名前
      * @param value 値
      * @return インスタンス
@@ -58,7 +56,7 @@ public class Query {
 
     /**
      * 条件の値を登録します。
-     * 
+     *
      * @param name  名前
      * @param value 値
      * @return インスタンス
@@ -70,7 +68,7 @@ public class Query {
 
     /**
      * 条件の値を登録します。
-     * 
+     *
      * @param name  名前
      * @param value 値
      * @return インスタンス
@@ -82,7 +80,7 @@ public class Query {
 
     /**
      * 条件の値を登録します。
-     * 
+     *
      * @param name  名前
      * @param value 値
      * @return インスタンス
@@ -94,7 +92,7 @@ public class Query {
 
     /**
      * 条件の値を登録します。
-     * 
+     *
      * @param name  名前
      * @param value 値
      * @return インスタンス
@@ -106,7 +104,7 @@ public class Query {
 
     /**
      * 条件の値を登録します。
-     * 
+     *
      * @param name  名前
      * @param value 値
      * @return インスタンス
@@ -122,7 +120,7 @@ public class Query {
 
     /**
      * SQLを実行する。 TODO: トランザクションをどうするか？
-     * 
+     *
      * @param clazz    関数に戻す型
      * @param consumer 取得したデータを加工する関数
      * @param <T>      関数に戻す型の仮引数

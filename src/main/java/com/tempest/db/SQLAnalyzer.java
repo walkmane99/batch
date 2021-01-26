@@ -4,14 +4,18 @@ import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-public class SQLAnalyzer {
+public final class SQLAnalyzer {
     public final static char QUOTE = '\'';
     public final static char DOUBLE_QUOTE = '"';
+
+
 
     private enum QUERY_TYPE {
         SELECT,UPDATE,INSERT,DELETE;
@@ -19,6 +23,7 @@ public class SQLAnalyzer {
 
     private int count;
     private QUERY_TYPE type;
+    private String sql;
 
     private Map<Integer,String> names;
 
@@ -34,6 +39,7 @@ public class SQLAnalyzer {
     }
 
     void analyze(String sql) {
+        this.sql = sql;
         StringReader fr = new StringReader(sql);
         StreamTokenizer tokenizer = new StreamTokenizer(fr);
         tokenizer.resetSyntax();
@@ -49,8 +55,8 @@ public class SQLAnalyzer {
         tokenizer.whitespaceChars('\t', '\t');
         tokenizer.whitespaceChars('\n', '\n');
         tokenizer.whitespaceChars('\r', '\r');
-        tokenizer.quoteChar(QUOTE);
-        tokenizer.quoteChar(DOUBLE_QUOTE);
+        //tokenizer.quoteChar(QUOTE);
+        //tokenizer.quoteChar(DOUBLE_QUOTE);
         // tokenizer.parseNumbers();
         tokenizer.eolIsSignificant(false);
         tokenizer.slashStarComments(true);
@@ -69,12 +75,12 @@ public class SQLAnalyzer {
                         word(tokenizer.sval);
                         System.out.println("<word>" + tokenizer.sval + "</word>");
                         break;
-                    case QUOTE:
-                        System.out.println("<char>" + tokenizer.sval + "</char>");
-                        break;
-                    case DOUBLE_QUOTE:
-                        System.out.println("<string>" + tokenizer.sval + "</string>");
-                        break;
+//                    case QUOTE:
+//                        System.out.println("<char>" + tokenizer.sval + "</char>");
+//                        break;
+//                    case DOUBLE_QUOTE:
+//                        System.out.println("<string>" + tokenizer.sval + "</string>");
+//                        break;
                     default:
                         System.out.print("<token>" + (char) tokenizer.ttype + "</token>");
                 }
@@ -95,6 +101,7 @@ public class SQLAnalyzer {
         }
         // ${zzz} を取得すること先頭から続くのでその位置を持つこと、名前とindexの組み合わせで覚えておく
         if (val.indexOf("${") != -1) {
+            //TODO: in (${zzz}) だった場合、リストのサイズをどこから持ってくるか？
             this.count++;
             this.names.put(this.count, val.substring(2, val.length() -1));
         }
@@ -124,4 +131,16 @@ public class SQLAnalyzer {
     public boolean isUpdate() {
         return this.type == QUERY_TYPE.UPDATE;
     }
+
+
+    public Map<Integer, Condition<?>> getCondition(List<Condition<?>> conditions) {
+        return this.names.entrySet().stream().collect(Collectors.toMap(  Map.Entry::getKey, entry-> conditions.stream()
+            .filter(condition -> condition.getName().equals(entry.getValue())).findFirst().orElse(null)));
+    }
+
+    public String getSQL() {
+        // FIXME : 変換　${sss} -> ?
+        return this.sql;
+    }
+
 }

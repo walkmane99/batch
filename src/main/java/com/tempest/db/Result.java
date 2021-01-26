@@ -19,10 +19,11 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import static com.tempest.function.LambdaExceptionUtil.*;
 @Log4j2
-public class Result<T>  {
+public final class Result<T>  {
 
     private Query query;
 
@@ -43,9 +44,13 @@ public class Result<T>  {
 
 
     void execute(Connection con, Consumer<T> consumer) throws SQLException, FaildCreateObjectException  {
-        PreparedStatement statement = con.prepareStatement(this.query.getSQL());
-        //TODO;順番の問題があるけど。
-        this.query.getConditions().stream().forEach(rethrowConsumer(condition -> condition.set(1, statement)));
+        SQLAnalyzer analyzer = new SQLAnalyzer();
+        analyzer.analyze(this.query.getSQL());
+        PreparedStatement statement = con.prepareStatement(analyzer.getSQL());
+        //TODO;in区とかListを渡したいときの対応
+        Map<Integer, Condition<?>> conditionMap = analyzer.getCondition(this.query.getConditions());
+        conditionMap.entrySet().forEach(rethrowConsumer(entry-> entry.getValue().set(entry.getKey(),statement)));
+        // TODO: 実行するSQLのタイプに寄って処理を分岐する。
         try (ResultSet rs = statement.executeQuery()) {
             while (rs.next()) {
                 T row = this.getRow(rs);
