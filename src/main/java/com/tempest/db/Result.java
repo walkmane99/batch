@@ -11,16 +11,17 @@ import org.apache.logging.log4j.Level;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import static com.tempest.function.LambdaExceptionUtil.*;
 @Log4j2
 public final class Result<T>  {
@@ -28,6 +29,8 @@ public final class Result<T>  {
     private Query query;
 
     private Class<T> targetClass;
+
+    Result() {}
 
     Result(Class<T> targetClass) {
         this.targetClass = targetClass;
@@ -37,20 +40,77 @@ public final class Result<T>  {
         this.query = query;
     }
 
-    private T getRow(ResultSet rs) throws SQLException, FaildCreateObjectException {
-        return create(rs);
-    }
 
 
 
-    void execute(Connection con, Consumer<T> consumer) throws SQLException, FaildCreateObjectException  {
+
+    int execute(Connection con, Consumer<T> consumer) throws SQLException, FaildCreateObjectException  {
         SQLAnalyzer analyzer = new SQLAnalyzer();
         analyzer.analyze(this.query.getSQL());
         PreparedStatement statement = con.prepareStatement(analyzer.getSQL());
         //TODO;in区とかListを渡したいときの対応
         Map<Integer, Condition<?>> conditionMap = analyzer.getCondition(this.query.getConditions());
         conditionMap.entrySet().forEach(rethrowConsumer(entry-> entry.getValue().set(entry.getKey(),statement)));
-        // TODO: 実行するSQLのタイプに寄って処理を分岐する。
+        // 実行するSQLのタイプに寄って処理を分岐する。
+        if (analyzer.isSelect() ) {
+            this.executeQuery(statement,consumer);
+            //TODO:件数
+            return 0;
+        } else {
+           return this.executeUpdate(statement);
+        }
+    }
+
+
+    int execute(Connection con, List<T> list) throws SQLException, FaildCreateObjectException  {
+        SQLAnalyzer analyzer = new SQLAnalyzer();
+        analyzer.analyze(this.query.getSQL());
+        PreparedStatement statement = con.prepareStatement(analyzer.getSQL());
+
+
+        Class<T> clazz = (Class<T>) list.get(0).getClass();
+        Field[] fields = ReflectionUtils.getFields(clazz);
+
+        Map<Integer, Condition<?>> conditionMap =
+            list.stream().flatMap(record ->
+                Stream.of(fields).map(field -> {
+
+                    if (field.getClass() == String) {
+                        return new StringCondition(field.getName(), field.get(record));
+                    }
+                    return new StringCondition("1","");
+                });
+    }).;
+
+
+
+    //FIXME: ここで引数のlistからconditionListを作成する。
+         analyzer.getCondition(this.query.getConditions());
+        conditionMap.entrySet().forEach(rethrowConsumer(entry-> entry.getValue().set(entry.getKey(),statement)));
+        if (!analyzer.isSelect() ) {
+            return this.executeUpdate(statement);
+        }
+        return 0;
+    }
+
+    /**
+     *　更新処理系
+     * @param statement
+     * @return
+     * @throws SQLException
+     */
+    private int executeUpdate(PreparedStatement statement) throws SQLException {
+        return statement.executeUpdate();
+    }
+
+    /**
+     * 検索刑
+     * @param statement
+     * @param consumer
+     * @return
+     * @throws SQLException
+     */
+    private void executeQuery(PreparedStatement statement, Consumer<T> consumer) throws SQLException, FaildCreateObjectException {
         try (ResultSet rs = statement.executeQuery()) {
             while (rs.next()) {
                 T row = this.getRow(rs);
@@ -64,8 +124,7 @@ public final class Result<T>  {
     }
 
 
-
-    private  T create(ResultSet rs)
+    private  T getRow(ResultSet rs)
         throws SQLException, FaildCreateObjectException {
         try {
             boolean filled = false;

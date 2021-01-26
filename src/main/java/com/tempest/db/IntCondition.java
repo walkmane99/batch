@@ -3,7 +3,7 @@ package com.tempest.db;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class IntCondition implements Condition<Integer> {
+public final class IntCondition implements Condition<Integer> {
 
     private String name;
 

@@ -3,7 +3,7 @@ package com.tempest.db;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class DoubleCondition implements Condition<Double> {
+public final class DoubleCondition implements Condition<Double> {
 
     private String name;
 

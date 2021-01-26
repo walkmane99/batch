@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.sql.Date;
 
-public class DateCondition implements Condition<LocalDate> {
+public final class DateCondition implements Condition<LocalDate> {
 
     private String name;
 

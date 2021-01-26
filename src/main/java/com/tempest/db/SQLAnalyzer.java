@@ -139,8 +139,8 @@ public final class SQLAnalyzer {
     }
 
     public String getSQL() {
-        // FIXME : 変換　${sss} -> ?
-        return this.sql;
+        // TODO : Listが渡ったときの返し方。
+        return this.sql.replaceAll("\\$\\{.*\\}", "?");
     }
 
 }

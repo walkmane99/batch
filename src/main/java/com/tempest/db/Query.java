@@ -128,13 +128,49 @@ public final class Query {
      * @throws SQLException
      * @throws FaildCreateObjectException
      */
-    public <T> Result<T> execute(Class<T> clazz, Consumer<T> consumer) throws SQLException, FaildCreateObjectException {
+    public <T> int execute(Class<T> clazz, Consumer<T> consumer) throws SQLException, FaildCreateObjectException {
         Result<T> result = new Result<>(clazz);
         result.setQuery(this);
         try (Connection con = ConnectionPool.getInstance().getConnection()) {
-            result.execute(con, consumer);
+           return result.execute(con, consumer);
         }
-        return result;
     }
+
+    /**
+     * SQLを実行する。 TODO: トランザクションをどうするか？
+     *
+     * @param clazz    関数に戻す型
+     * @param <T>      関数に戻す型の仮引数
+     * @return
+     * @throws SQLException
+     * @throws FaildCreateObjectException
+     */
+    public <T> List<T> execute(Class<T> clazz) throws SQLException, FaildCreateObjectException {
+        Result<T> result = new Result<>(clazz);
+        List<T> list = new ArrayList<>();
+        result.setQuery(this);
+        try (Connection con = ConnectionPool.getInstance().getConnection()) {
+            result.execute(con, record-> list.add(record));
+        }
+        return list;
+    }
+
+    /**
+     * SQLを実行する。 TODO: トランザクションをどうするか？
+     *
+     * @param <T>      関数に戻す型の仮引数
+     * @return
+     * @throws SQLException
+     * @throws FaildCreateObjectException
+     */
+    public <T> int execute(List<T> list) throws SQLException, FaildCreateObjectException {
+        Result<T> result = new Result<>();
+        result.setQuery(this);
+        try (Connection con = ConnectionPool.getInstance().getConnection()) {
+           return result.execute(con,list);
+        }
+    }
+
+
 
 }

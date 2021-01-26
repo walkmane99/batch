@@ -1,11 +1,9 @@
 package com.tempest.db;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
-public class StringCondition implements Condition<String> {
+public final class StringCondition implements Condition<String> {
 
     private String name;
 

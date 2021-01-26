@@ -3,7 +3,7 @@ package com.tempest.db;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class LongCondition implements Condition<Long> {
+public final class LongCondition implements Condition<Long> {
 
     private String name;
 

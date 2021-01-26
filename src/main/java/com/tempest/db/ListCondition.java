@@ -2,10 +2,9 @@ package com.tempest.db;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.List;
 
-public class ListCondition implements Condition<List<?>> {
+public final class ListCondition implements Condition<List<?>> {
     private String name;
 
     private List<?> value;
@@ -22,7 +21,7 @@ public class ListCondition implements Condition<List<?>> {
 
     @Override
     public List<?> getValue() {
-        return null;
+        return this.value;
     }
 
     @Override
