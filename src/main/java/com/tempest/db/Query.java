@@ -132,25 +132,25 @@ public final class Query {
         Result<T> result = new Result<>(clazz);
         result.setQuery(this);
         try (Connection con = ConnectionPool.getInstance().getConnection()) {
-            return result.execute(con, consumer);
+           return result.execute(con, consumer);
         }
     }
 
     /**
      * SQLを実行する。 TODO: トランザクションをどうするか？
      *
-     * @param clazz 関数に戻す型
-     * @param <T>   関数に戻す型の仮引数
+     * @param clazz    関数に戻す型
+     * @param <T>      関数に戻す型の仮引数
      * @return
      * @throws SQLException
      * @throws FaildCreateObjectException
      */
-    public <T> List<T> execute(Class<T> clazz) throws SQLException, FaildCreateObjectException {
+    public <T> List<T> execute(Class<T> clazz) throws SQLException, FaildCreateObjectException  {
         Result<T> result = new Result<>(clazz);
         List<T> list = new ArrayList<>();
         result.setQuery(this);
         try (Connection con = ConnectionPool.getInstance().getConnection()) {
-            result.execute(con, record -> list.add(record));
+            result.execute(con, record-> list.add(record));
         }
         return list;
     }
@@ -158,18 +158,19 @@ public final class Query {
     /**
      * SQLを実行する。 TODO: トランザクションをどうするか？
      *
-     * @param <T> 関数に戻す型の仮引数
+     * @param <T>      関数に戻す型の仮引数
      * @return
      * @throws SQLException
      * @throws FaildCreateObjectException
-     * @throws IllegalAccessException
      */
-    public <T> int execute(List<T> list) throws SQLException, FaildCreateObjectException, IllegalAccessException {
+    public <T> int execute(List<T> list) throws SQLException ,IllegalArgumentException {
         Result<T> result = new Result<>();
         result.setQuery(this);
         try (Connection con = ConnectionPool.getInstance().getConnection()) {
-            return result.execute(con, list);
+           return result.execute(con,list);
         }
     }
+
+
 
 }

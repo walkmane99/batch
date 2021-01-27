@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 import static com.tempest.function.LambdaExceptionUtil.*;
 
 @Log4j2
-public final class Result<T, fields> {
+public final class Result<T> {
 
     private Query query;
 
