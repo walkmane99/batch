@@ -14,6 +14,9 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -25,7 +28,7 @@ import java.util.stream.Stream;
 import static com.tempest.function.LambdaExceptionUtil.*;
 
 @Log4j2
-public final class Result<T> {
+public final class Result<T, fields> {
 
     private Query query;
 
@@ -59,36 +62,45 @@ public final class Result<T> {
         }
     }
 
-    int execute(Connection con, List<T> list) throws SQLException, FaildCreateObjectException, IllegalAccessException {
+    int execute(Connection con, List<T> list) throws SQLException, IllegalAccessException {
         SQLAnalyzer analyzer = new SQLAnalyzer();
         analyzer.analyze(this.query.getSQL());
+        if (analyzer.isSelect()) {
+            return 0;
+        }
         PreparedStatement statement = con.prepareStatement(analyzer.getSQL());
-
         Class<T> clazz = (Class<T>) list.get(0).getClass();
         Field[] fields = ReflectionUtils.getFields(clazz);
-        // Map<Integer, Condition<?>> conditionMap =
-        list.stream().flatMap(rethrowFunction(record -> {
-            List<Condition<?>> conditions = Stream.of(fields).map(rethrowFunction(field -> {
-                Condition<?> result = null;
-                if (field.getDeclaringClass() == String.class) {
-                    result = new StringCondition(field.getName(), (String) field.get(record));
-                }
-                result = new StringCondition("1", "");
-                return result;
-            })).collect(Collectors.toList());
-            return analyzer.getCondition(conditions).entrySet().stream();
+        list.stream()
+            .map(rethrowFunction(record -> analyzer.getCondition(this.createCondition(record, fields))))
+            .forEach(rethrowConsumer(m -> {
+                m.entrySet().forEach(rethrowConsumer(entry -> entry.getValue().set(entry.getKey(), statement)));
+                statement.addBatch();
+            })
+        );
+        return this.executeUpdate(statement);
+    }
 
-        })).forEach(rethrowConsumer(entry -> entry.getValue().set(entry.getKey(), statement)));
 
-        if (!analyzer.isSelect()) {
-            return this.executeUpdate(statement);
-        }
-        return 0;
+    private List<Condition<?>> createCondition(T record, Field[] fields) throws IllegalAccessException {
+        return Stream.of(fields).map(rethrowFunction(field -> {
+            Condition<?> result = null;
+            if (field.getDeclaringClass() == String.class) {
+                result = new StringCondition(field.getName(), (String) field.get(record));
+            } else if(field.getDeclaringClass() == LocalDate.class) {
+                result = new DateCondition(field.getName(),(LocalDate)field.get(record));
+            } else if(field.getDeclaringClass() == Long.class) {
+                result = new LongCondition(field.getName(),(Long)field.get(record));
+            } else if(field.getDeclaringClass() == Integer.class) {
+                result = new IntCondition(field.getName(),(Integer)field.get(record));
+            }
+            return result;
+        })).collect(Collectors.toList());
     }
 
     /**
      * 更新処理系
-     * 
+     *
      * @param statement
      * @return
      * @throws SQLException
@@ -99,7 +111,7 @@ public final class Result<T> {
 
     /**
      * 検索刑
-     * 
+     *
      * @param statement
      * @param consumer
      * @return
