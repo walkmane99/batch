@@ -1,6 +1,8 @@
 package com.tempest.store;
 
 import com.tempest.utils.FaildCreateObjectException;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -24,6 +26,8 @@ public class Store implements State {
     private Map<String, Object> map;
 
     private static State instance;
+
+    Config config = ConfigFactory.load();
 
     private Store() {
         this.listeners = new ArrayList<>();
@@ -51,8 +55,6 @@ public class Store implements State {
         return map.containsKey(key);
     }
 
-
-
     /**
      *
      * @param listener
@@ -65,9 +67,12 @@ public class Store implements State {
         this.listeners.forEach(listener -> listener.propertyChange(evt));
     }
 
+    public <T> Optional<T> getProperties(Type type) {
+        return Optional.ofNullable((T) this.map.get(type.getTypeName()));
+    }
 
-    public <T> Optional<T> getProperties(Type type)  {
-        return Optional.ofNullable((T)this.map.get(type.getTypeName()));
+    public Config getConfig() {
+        return this.config;
     }
 
 }

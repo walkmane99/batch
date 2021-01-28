@@ -71,31 +71,29 @@ public final class Result<T> {
         PreparedStatement statement = con.prepareStatement(analyzer.getSQL());
         Class<T> clazz = (Class<T>) list.get(0).getClass();
         Field[] fields = ReflectionUtils.getFields(clazz);
-        list.stream()
-            .map(rethrowFunction(record -> analyzer.getCondition(this.createCondition(record, fields))))
-            .forEach(rethrowConsumer(m -> {
-                m.entrySet().forEach(rethrowConsumer(entry -> entry.getValue().set(entry.getKey(), statement)));
-                statement.addBatch();
-            })
-        );
+        list.stream().map(rethrowFunction(record -> analyzer.getCondition(this.createCondition(record, fields))))
+                .forEach(rethrowConsumer(m -> {
+                    m.entrySet().forEach(rethrowConsumer(entry -> entry.getValue().set(entry.getKey(), statement)));
+                    statement.addBatch();
+                }));
         return this.executeUpdate(statement);
     }
 
-
     private List<Condition<?>> createCondition(T record, Field[] fields) throws IllegalAccessException {
-        return Stream.of(fields).map(rethrowFunction(field -> {
-            Condition<?> result = null;
+        Conditions result = new Conditions();
+        Field.setAccessible(fields, true);
+        for (Field field : fields) {
             if (field.getDeclaringClass() == String.class) {
-                result = new StringCondition(field.getName(), (String) field.get(record));
-            } else if(field.getDeclaringClass() == LocalDate.class) {
-                result = new DateCondition(field.getName(),(LocalDate)field.get(record));
-            } else if(field.getDeclaringClass() == Long.class) {
-                result = new LongCondition(field.getName(),(Long)field.get(record));
-            } else if(field.getDeclaringClass() == Integer.class) {
-                result = new IntCondition(field.getName(),(Integer)field.get(record));
+                result.append(field.getName(), (String) field.get(record));
+            } else if (field.getDeclaringClass() == LocalDate.class) {
+                result.append(field.getName(), (LocalDate) field.get(record));
+            } else if (field.getDeclaringClass() == Long.class) {
+                result.append(field.getName(), (Long) field.get(record));
+            } else if (field.getDeclaringClass() == Integer.class) {
+                result.append(field.getName(), (Integer) field.get(record));
             }
-            return result;
-        })).collect(Collectors.toList());
+        }
+        return result.getConditions();
     }
 
     /**

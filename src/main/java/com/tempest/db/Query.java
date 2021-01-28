@@ -27,91 +27,12 @@ import java.util.function.Consumer;
  * オブジェクト (バイナリ）
  *
  */
-public final class Query {
+public final class Query extends Conditions {
 
     private String query;
 
-    private List<Condition<?>> conditions;
-
     public Query(String query) {
-        this.conditions = new ArrayList<>();
         this.query = query;
-    }
-
-    List<Condition<?>> getConditions() {
-        return this.conditions;
-    }
-
-    /**
-     * 条件の値を登録します。
-     *
-     * @param name  名前
-     * @param value 値
-     * @return インスタンス
-     */
-    public Query append(String name, Double value) {
-        this.conditions.add(new DoubleCondition(name, value));
-        return this;
-    }
-
-    /**
-     * 条件の値を登録します。
-     *
-     * @param name  名前
-     * @param value 値
-     * @return インスタンス
-     */
-    public Query append(String name, String value) {
-        this.conditions.add(new StringCondition(name, value));
-        return this;
-    }
-
-    /**
-     * 条件の値を登録します。
-     *
-     * @param name  名前
-     * @param value 値
-     * @return インスタンス
-     */
-    public Query append(String name, LocalDate value) {
-        this.conditions.add(new DateCondition(name, value));
-        return this;
-    }
-
-    /**
-     * 条件の値を登録します。
-     *
-     * @param name  名前
-     * @param value 値
-     * @return インスタンス
-     */
-    public Query append(String name, Integer value) {
-        this.conditions.add(new IntCondition(name, value));
-        return this;
-    }
-
-    /**
-     * 条件の値を登録します。
-     *
-     * @param name  名前
-     * @param value 値
-     * @return インスタンス
-     */
-    public Query append(String name, Long value) {
-        this.conditions.add(new LongCondition(name, value));
-        return this;
-    }
-
-    /**
-     * 条件の値を登録します。
-     *
-     * @param name  名前
-     * @param value 値
-     * @return インスタンス
-     */
-    public Query append(String name, List<?> value) {
-        this.conditions.add(new ListCondition(name, value));
-        return this;
     }
 
     String getSQL() {
@@ -132,25 +53,25 @@ public final class Query {
         Result<T> result = new Result<>(clazz);
         result.setQuery(this);
         try (Connection con = ConnectionPool.getInstance().getConnection()) {
-           return result.execute(con, consumer);
+            return result.execute(con, consumer);
         }
     }
 
     /**
      * SQLを実行する。 TODO: トランザクションをどうするか？
      *
-     * @param clazz    関数に戻す型
-     * @param <T>      関数に戻す型の仮引数
+     * @param clazz 関数に戻す型
+     * @param <T>   関数に戻す型の仮引数
      * @return
      * @throws SQLException
      * @throws FaildCreateObjectException
      */
-    public <T> List<T> execute(Class<T> clazz) throws SQLException, FaildCreateObjectException  {
+    public <T> List<T> execute(Class<T> clazz) throws SQLException, FaildCreateObjectException {
         Result<T> result = new Result<>(clazz);
         List<T> list = new ArrayList<>();
         result.setQuery(this);
         try (Connection con = ConnectionPool.getInstance().getConnection()) {
-            result.execute(con, record-> list.add(record));
+            result.execute(con, record -> list.add(record));
         }
         return list;
     }
@@ -158,19 +79,18 @@ public final class Query {
     /**
      * SQLを実行する。 TODO: トランザクションをどうするか？
      *
-     * @param <T>      関数に戻す型の仮引数
+     * @param <T> 関数に戻す型の仮引数
      * @return
      * @throws SQLException
+     * @throws IllegalAccessException
      * @throws FaildCreateObjectException
      */
-    public <T> int execute(List<T> list) throws SQLException ,IllegalArgumentException {
+    public <T> int execute(List<T> list) throws SQLException, IllegalAccessException {
         Result<T> result = new Result<>();
         result.setQuery(this);
         try (Connection con = ConnectionPool.getInstance().getConnection()) {
-           return result.execute(con,list);
+            return result.execute(con, list);
         }
     }
-
-
 
 }

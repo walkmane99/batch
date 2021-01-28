@@ -103,7 +103,7 @@ public class ConnectionPool implements AutoCloseable {
         // クローズ漏れとみなすまでの時間 初期値は 60 sec
         this.pool.setRemoveAbandonedTimeout(60);
         this.pool.setJdbcInterceptors("org.apache.tomcat.jdbc.pool.interceptor.ConnectionState;"
-            + "org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer");
+                + "org.apache.tomcat.jdbc.pool.interceptor.StatementFinalizer");
         this.datasource = new DataSource();
         this.datasource.setPoolProperties(this.pool);
 
