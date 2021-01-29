@@ -55,21 +55,9 @@ public class AutowiredResolver {
         field.setAccessible(true);
         Type type = getType(field);
         Object obj = BeanBuilder.getInstance().get(type);
-        field.set(target, wrapProxy(target, obj));
         log.debug("target: " + target);
         log.debug("field: " + field.getName());
         log.debug("obj: " + obj);
-    }
-
-    private Object wrapProxy(Object target, Object obj) {
-        Service service = target.getClass().getAnnotation(Service.class);
-        log.debug("設定 target :　" + target.getClass().getName());
-        if (service != null && service.proxy() == com.tempest.annotation.Service.Proxy.ON) {
-            log.debug("設定ProxyON:　" + obj.getClass().getName());
-            return AutowiredResolver.getProxyInstance(obj);
-        } else {
-            return obj;
-        }
     }
 
     public void resolve(Object target) {
@@ -90,16 +78,6 @@ public class AutowiredResolver {
         if (log.isDebugEnabled()) {
             log.debug("end setAutowired (Object)");
         }
-    }
-
-    public static <T> T getProxyInstance(T instance) {
-        Class<? extends Object> clazz = instance.getClass();
-        // 対象クラスが実装するインターフェースのリスト
-        Class<?>[] classes = clazz.getInterfaces();
-        Intercepter intercepter = new Intercepter(instance);
-        @SuppressWarnings("unchecked")
-        T proxyInstance = (T) Proxy.newProxyInstance(clazz.getClassLoader(), classes, intercepter);
-        return proxyInstance;
     }
 
 }

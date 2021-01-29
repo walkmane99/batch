@@ -1,4 +1,4 @@
-package com.tempest.sql.system;
+package com.tempest.db.system;
 
 import java.sql.Connection;
 import java.sql.SQLException;

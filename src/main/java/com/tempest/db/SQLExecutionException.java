@@ -1,4 +1,4 @@
-package com.tempest.sql;
+package com.tempest.db;
 
 import com.tempest.ApplicationException;
 

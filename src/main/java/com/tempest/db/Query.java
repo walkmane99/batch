@@ -1,6 +1,6 @@
 package com.tempest.db;
 
-import com.tempest.sql.system.ConnectionPool;
+import com.tempest.db.system.ConnectionPool;
 import com.tempest.utils.FaildCreateObjectException;
 
 import java.sql.Connection;

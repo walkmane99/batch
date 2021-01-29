@@ -2,8 +2,8 @@ package com.tempest.db;
 
 import com.google.common.base.CaseFormat;
 import com.tempest.ApplicationRuntimeException;
-import com.tempest.sql.SQLExecutionException;
-import com.tempest.sql.system.ConnectionPool;
+import com.tempest.db.SQLExecutionException;
+import com.tempest.db.system.ConnectionPool;
 import com.tempest.utils.FaildCreateObjectException;
 import com.tempest.utils.ReflectionUtils;
 import lombok.extern.log4j.Log4j2;
@@ -235,7 +235,6 @@ public final class Result<T> {
      * カラム名からプロパティ名を作成し、clazzからフィールドプロパティを特定してPropertyDescriptorとして返します。
      *
      * クラスのプロパティ名は、カラム名（スネークケース）をキャメルケース（先頭小文字）で指定していることが前提です。
-     * カラム名の末尾が数字で終わるものは、最後の_(アンダーバー)で切り分けた前をプロパティ名としています。
      *
      * @param clazz      クラス
      * @param columnName カラム名
@@ -246,15 +245,10 @@ public final class Result<T> {
     private PropertyDescriptor getPropertyDescriptor(Class<T> clazz, String columnName) throws SQLExecutionException {
         if (log.isTraceEnabled()) {
             log.trace("start getPropertyDescriptor");
-            log.trace("class : " + clazz.getName());
         }
         String name = columnName;
         if (log.isTraceEnabled()) {
             log.trace("name: " + name);
-        }
-        if (name.matches(".*\\d+$")) {
-            // 末尾が数字のカラムは、末尾の数字を切り捨てる。
-            name = name.substring(0, name.lastIndexOf("_"));
         }
         name = CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, name);
         if (log.isTraceEnabled()) {
