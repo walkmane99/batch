@@ -27,7 +27,7 @@ import java.util.function.Consumer;
  * オブジェクト (バイナリ）
  *
  */
-public final class Query extends Conditions {
+public final class Query extends Conditions implements Executable {
 
     private String query;
 
@@ -49,6 +49,7 @@ public final class Query extends Conditions {
      * @throws SQLException
      * @throws FaildCreateObjectException
      */
+    @Override
     public <T> int execute(Class<T> clazz, Consumer<T> consumer) throws SQLException, FaildCreateObjectException {
         Result<T> result = new Result<>(clazz);
         result.setQuery(this);
@@ -66,6 +67,7 @@ public final class Query extends Conditions {
      * @throws SQLException
      * @throws FaildCreateObjectException
      */
+    @Override
     public <T> List<T> execute(Class<T> clazz) throws SQLException, FaildCreateObjectException {
         Result<T> result = new Result<>(clazz);
         List<T> list = new ArrayList<>();
@@ -85,6 +87,7 @@ public final class Query extends Conditions {
      * @throws IllegalAccessException
      * @throws FaildCreateObjectException
      */
+    @Override
     public <T> int execute(List<T> list) throws SQLException, IllegalAccessException {
         Result<T> result = new Result<>();
         result.setQuery(this);

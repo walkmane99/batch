@@ -8,6 +8,7 @@ import com.tempest.annotation.Service;
 import com.tempest.builder.BeanBuilder;
 import com.tempest.builder.ObjectPreserve;
 import com.tempest.builder.ObjectPreserveList;
+import com.tempest.builder.reflect.ReflectClass;
 import com.tempest.store.Store;
 import com.tempest.utils.FaildCreateObjectException;
 import com.tempest.utils.ReflectionUtils;
@@ -63,7 +64,9 @@ public class Application {
         AnnotationInfo info = classInfo.getAnnotationInfo(annotationName);
         String name = (String) info.getParameterValues().stream().filter(value -> value.getName().equals("name"))
                 .map(value -> value.getValue()).findFirst().orElse(null);
-        ObjectPreserve obj = new ObjectPreserve(classInfo.loadClass(), name, null, type);
+        ReflectClass n = new ReflectClass();
+        Class<?> targetClass = n.x(classInfo.loadClass());
+        ObjectPreserve obj = new ObjectPreserve(targetClass, name, null, type);
         return obj;
     }
 

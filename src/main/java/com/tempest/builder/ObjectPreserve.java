@@ -1,6 +1,7 @@
 package com.tempest.builder;
 
 import com.tempest.annotation.Autowired;
+import com.tempest.builder.reflect.ReflectClass;
 import com.tempest.utils.FaildCreateObjectException;
 import com.tempest.utils.ReflectionUtils;
 import lombok.AllArgsConstructor;
@@ -11,6 +12,9 @@ import lombok.Getter;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,6 +32,8 @@ import static com.tempest.function.LambdaExceptionUtil.*;
 public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    private transient static ClassLoader loader;
 
     @Override
     public int compareTo(ObjectPreserve o) {
@@ -79,10 +85,22 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
         this.score = scope;
         this.type = type;
         this.isSingleton = isSingleton;
+        if (loader == null) {
+            loader = this.targetClass.getClassLoader();
+        }
+    }
+
+    public static ClassLoader getClassLoader() {
+        return loader;
     }
 
     public void addRelation(List<ObjectPreserve> list) {
-        this.preserveList = list.stream().filter(preserve -> necessary(preserve)).collect(Collectors.toList());
+        try {
+            this.preserveList = list.stream().filter(preserve -> necessary(preserve)).collect(Collectors.toList());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public Set<Class<?>> getAllExtendedOrImplementedTypesRecursively() {
@@ -141,6 +159,7 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
 
     @SuppressWarnings("unchecked")
     public <T> T create() throws FaildCreateObjectException {
+
         if (isSingleton()) {
             if (getInstance() == null) {
                 this.instance = newInstance();
@@ -156,7 +175,7 @@ public class ObjectPreserve implements Comparable<ObjectPreserve>, Serializable 
         try {
             // 必要なオブジェクトを先に作っておく。
             this.preserveList.stream().forEach(rethrowConsumer(ObjectPreserve::create));
-            Object instance = ConstructorResolver.newInstance(this).orElseThrow();
+            final Object instance = ConstructorResolver.newInstance(this).orElseThrow();
             injectionAutowired(instance);
             return instance;
         } catch (Throwable throwable) {
