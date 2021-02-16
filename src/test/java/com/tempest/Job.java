@@ -10,7 +10,7 @@ import com.tempest.annotation.Worker;
 @Task(name = "仕事")
 public class Job {
 
-    @Worker
+    @Worker(name = "exec", depends = { "" })
     public void exec(@Param(name = "famiry") String name) {
 
     }
